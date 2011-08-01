@@ -1,0 +1,47 @@
+pynotifyd (0.5-2) UNRELEASED; urgency=low
+
+  * Missing (empty) ${misc:Depends} added for debhelper.
+  * Support changing of uid and gid of daemon.
+
+ -- Helmut Grohne <h.grohne@cygnusnetworks.de>  Thu, 24 Feb 2011 15:22:23 +0100
+
+pynotifyd (0.5-1) stable; urgency=low
+
+  * Prepared for release
+  * Fixed setup.py license and version
+  * Version bump to 0.5
+
+ -- Torge Szczepanek <info@cygnusnetworks.de>  Tue, 01 Feb 2011 15:55:20 +0100
+
+pynotifyd (0.2-1) UNRELEASED; urgency=low
+
+  * Library:
+    + Developergarden: Protocol changed. Support json.
+    + Provide hostname variable in config for interpolation.
+    + Split pynotifyd/__init__.py to pynotifyd/queue.py.
+    + Handle unknown exceptions from providers.
+    + Developergarden: Added methods exposed by developergarden_ctl tool.
+    + Developergarden: added sender config option.
+    + Sipgate: added get_balance.
+  * Daemon:
+    + Lock queue directory.
+    + Log exceptions to syslog before crashing.
+    + Added option --clearqueue.
+    + Added proctitle setting to general section.
+    + Fixed handling of sigterm with inotify.
+    + Handle stale locks.
+  * Added developergarden_ctl tool.
+  * Added manual page for developergarden_ctl.
+  * Copyright: GPL-3.
+  * Missing Build-Depends: python added.
+  * Explicitly state debian/source/format as 1.0.
+  * Added init.d script.
+  * Install pynotifyd.conf and create spool directory.
+
+ -- Helmut Grohne <h.grohne@cygnusnetworks.de>  Tue, 25 Jan 2011 16:07:43 +0100
+
+pynotifyd (0.1-1) unstable; urgency=low
+
+  * Initial release.
+
+ -- Helmut Grohne <h.grohne@cygnusnetworks.de>  Tue, 26 Oct 2010 19:23:23 +0200

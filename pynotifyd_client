@@ -1,0 +1,52 @@
+#!/usr/bin/python
+
+import pynotifyd
+import pynotifyd.queue
+from optparse import OptionParser
+import sys
+
+def die(message):
+	sys.stderr.write(message + "\n")
+	sys.exit(1)
+
+def die_exc(exception):
+	die("error: %s" % str(exception))
+
+def main():
+	def_config = "/etc/pynotifyd.conf"
+	parser = OptionParser(usage="Usage: %prog [options] <recipent> [message]")
+	parser.add_option("-c", "--config", dest="configfile", default=def_config,
+			help="use FILE as configuration file", metavar="FILE")
+	parser.add_option("-i", "--stdin", dest="stdin", default=False,
+			action="store_true", help="read message from stdin")
+	options, args = parser.parse_args()
+
+	try:
+		config = pynotifyd.read_config(options.configfile)
+
+		queue = pynotifyd.queue.PersistentQueue(config["general"]["queuedir"],
+				config["general"]["retry"])
+	except pynotifyd.PyNotifyDError, err:
+		die_exc(err)
+
+	if options.stdin:
+		if len(args) != 1:
+			die("you need to pass exactly one recipient")
+		recipient = args[0]
+		message = sys.stdin.read()
+	else:
+		if len(args) < 2:
+			die("recipient and message required")
+		recipient = args[0]
+		message = " ".join(args[1:])
+
+	if recipient not in config["contacts"]:
+		die("unknown recipient %s" % recipient)
+
+	try:
+		queue.enqueue(recipient, message)
+	except pynotifyd.PyNotifyDError, err:
+		die_exc(err)
+
+if __name__ == "__main__":
+	main()

@@ -1,0 +1,9 @@
+Format-Specification: http://svn.debian.org/wsvn/dep/web/deps/dep5.mdwn?op=file&rev=135
+Name: pynotifyd
+Maintainer: Torge Szczepanek <info@cygnusnetworks.de>
+Source: none yet
+
+Files: *
+Copyright: 2010, Cygnus Networks GmbH <info@cygnusnetworks.de>
+License: GPL-3
+ See /usr/share/common-licenses/GPL-3

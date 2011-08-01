@@ -1,0 +1,38 @@
+.TH developergarden_ctl 1 "30 November 2010"
+.SH NAME
+developergarden_ctl - tool for modifying a Developergarden account
+.SH SYNOPSIS
+.B developergarden_ctl
+[
+.B --help
+] [
+.B --config=FILE
+]
+.I provider action
+[
+.I params
+]
+.SH DESCRIPTION
+.PP
+.B developergarden_ctl
+is a tool for modifying a Developergarden account.
+It exposes part of the rest interface to the command line.
+.SH ACTIONS
+.TP
+.B request_validation_sms
+Requests that Developergarden sends a validation SMS to the given phone number which has to start with
+.B +49.
+.TP
+.B enter_validation_code
+Report a validation code received via SMS to the Developergarden servers.
+The first parameter is the same phone number that was passed to
+.B request_validation_sms
+and the second parameter is the received validation code.
+If this call completes successfully, the Developergarden account is able to spoof the phone number requested.
+.TP
+.B get_balance
+Reports the balance of the account.
+This command takes no parameters.
+The balance is given in tenths of an Euro cent.
+.SH AUTHOR
+Helmut Grohne <h.grohne@cgynusnetworks.de>

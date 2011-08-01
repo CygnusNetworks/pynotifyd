@@ -1,0 +1,187 @@
+#!/usr/bin/python
+
+import pynotifyd
+import pynotifyd.queue
+import pynotifyd.providers.all
+import syslog
+from optparse import OptionParser
+import sys
+import os
+import signal
+import grp
+import pwd
+try:
+	from setproctitle import setproctitle
+except ImportError:
+	def setproctitle(_):
+		die("Cannot set process title: setproctitle module not found.")
+
+def die(message):
+	sys.stderr.write(message + "\n")
+	sys.exit(1)
+
+def die_exc(exception):
+	die("error: %s" % str(exception))
+
+def partial_apply(function, *boundargs, **boundkwargs):
+	def wrapped_function(*args, **kwargs):
+		newargs = boundargs + args
+		newkwargs = boundkwargs.copy()
+		boundkwargs.update(kwargs)
+		return function(*newargs, **newkwargs)
+	wrapped_function.__doc__ = function.__doc__
+	return wrapped_function
+
+def daemonize():
+	rend, wend = os.pipe()
+	rend = os.fdopen(rend, "r")
+	wend = os.fdopen(wend, "w")
+	os.chdir("/")
+	devnull = os.open("/dev/null", os.O_RDWR)
+	os.dup2(devnull, 0)
+	os.dup2(devnull, 1)
+	# Redirect stderr later, so we can use it for die.
+	try:
+		if os.fork() > 0:
+			wend.close()
+			data = rend.read()
+			if data:
+				sys.stderr.write(data)
+				sys.exit(1)
+			sys.exit(0)
+	except OSError, e:
+		die("first fork failed")
+	os.setsid()
+	try:
+		if os.fork() > 0:
+			sys.exit(0)
+	except OSError, e:
+		die("second fork failed")
+	rend.close()
+	os.dup2(devnull, 2)
+	return wend
+
+def chgid(group):
+	if group.isdigit():
+		group = int(group)
+	else:
+		try:
+			group = grp.getgrnam(group).gr_gid
+		except KeyError:
+			die("group %r not found" % group)
+	try:
+		os.setgid(group)
+	except OSError, err:
+		die_exc(err)
+	if os.getgid() != group:
+		die("gid unchanged after setgid()")
+
+def chuid(user):
+	if user.isdigit():
+		user = int(user)
+	else:
+		try:
+			user = pwd.getpwnam(user).pw_uid
+		except KeyError:
+			die("user %r not found" % user)
+	try:
+		os.setuid(user)
+	except OSError, err:
+		die_exc(err)
+	if os.getuid() != user:
+		die("uid unchanged after setuid()")
+
+def main():
+	def_config = "/etc/pynotifyd.conf"
+	parser = OptionParser(usage="Usage: %prog [options]")
+	parser.add_option("-c", "--config", dest="configfile", default=def_config,
+			help="use FILE as configuration file", metavar="FILE")
+	parser.add_option("-f", "--foreground", dest="foreground", default=False,
+			help="do not fork into background", action="store_true")
+	parser.add_option("--clearqueue", dest="clearqueue", default=False,
+			help="clear the queue prior to starting up", action="store_true")
+	options, args = parser.parse_args()
+
+	if args:
+		die("unrecognized non-option parameters were passed")
+
+	try:
+		config = pynotifyd.read_config(options.configfile)
+
+		queue = pynotifyd.queue.PersistentQueue(config["general"]["queuedir"],
+				config["general"]["retry"])
+
+		providers = {}
+		for name, section in config["providers"].items():
+			try:
+				providers[name] = pynotifyd.providers.all.provider_drivers \
+						[section["driver"]](section)
+			except pynotifyd.PyNotifyDError, err:
+				err.args = err.args + ("in provider %s" % name,)
+				raise err
+	except pynotifyd.PyNotifyDError, err:
+		die_exc(err)
+
+	if "chgid" in config["general"]:
+		chgid(config["general"]["chgid"])
+	if "chuid" in config["general"]:
+		chuid(config["general"]["chuid"])
+
+	if config["general"]["notify"] == "inotify":
+		dw = pynotifyd.InotifyDirectoryWatcher
+	else:
+		dw = pynotifyd.SignalDirectoryWatcher
+
+	if config["general"].get("proctitle"):
+		setproctitle(config["general"]["proctitle"])
+
+	dw = dw(config["general"]["queuedir"])
+
+	syslog.openlog("pynotifyd")
+
+	if not options.foreground:
+		old_stderr = sys.stderr
+		sys.stderr = daemonize()
+
+	try:
+		queue.lock()
+		if options.clearqueue:
+			queue.clear()
+	except pynotifyd.PyNotifyDError, err:
+		die_exc(err)
+
+	debuglog = partial_apply(syslog.syslog, syslog.LOG_DEBUG)
+
+	# startup finished: terminate parent
+	if not options.foreground:
+		sys.stderr.close()
+		sys.stderr = old_stderr
+
+	try:
+		running = [True]
+		def terminate(signum, frame):
+			running[0] = False
+		signal.signal(signal.SIGTERM, terminate)
+		while running[0]:
+			debuglog("processing next event")
+			wait = pynotifyd.queue.process_queue_step(config, queue, providers,
+					debuglog)
+			if wait == 0:
+				continue
+			if wait is None:
+				debuglog("queue empty, sleeping ")
+			else:
+				debuglog("sleeping up to %d seconds" % wait)
+			dw(wait)
+		debuglog("terminating due to SIGTERM")
+	finally:
+		queue.unlock()
+
+if __name__ == '__main__':
+	try:
+		main()
+	except Exception, exc:
+		syslog.openlog("pynotifyd")
+		syslog.syslog(syslog.LOG_ERR, "pynotifyd crashed with exception " +
+				"%s: %s" % (exc.__class__.__name__, str(exc)))
+		raise
