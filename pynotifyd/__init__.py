@@ -103,6 +103,7 @@ config_spec = configobj.ConfigObj("""
 [general]
 queuedir = string(min=1)
 retry = list(min=1)
+notify = option("inotify", "signal")
 [contacts]
 [[__many__]]
 [providers]

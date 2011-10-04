@@ -129,8 +129,10 @@ def main():
 
 	if config["general"]["notify"] == "inotify":
 		dw = pynotifyd.InotifyDirectoryWatcher
-	else:
+	elif config["general"]["notify"] == "signal":
 		dw = pynotifyd.SignalDirectoryWatcher
+	else:
+		die("unknown notify method %r" % config["general"]["notify"])
 
 	if config["general"].get("proctitle"):
 		setproctitle(config["general"]["proctitle"])
