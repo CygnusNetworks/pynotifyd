@@ -252,7 +252,7 @@ class ProviderDevelopergarden(pynotifyd.providers.SMSProviderBase):
 		@raises PyNotifyDTemporaryError:
 		"""
 		if not phone.startswith("+49"):
-			raise PyNotifyDPermanentError(
+			raise pynotifyd.PyNotifyDPermanentError(
 					"cannot handle numbers outside Germany")
 		phone = "0" + phone[3:]
 		self.make_authorized_rest_request(
