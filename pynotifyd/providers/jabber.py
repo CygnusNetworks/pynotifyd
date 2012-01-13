@@ -26,6 +26,13 @@ class SendJabberClient(pyxmpp.jabber.client.JabberClient):
 		self.include_states = include_states
 		self.failure = pynotifyd.PyNotifyDTemporaryError(
 				"contact not available")
+		self.disconnected = False
+
+	def disconnect_once(self):
+		"""Invoke disconnect on the first call of this method."""
+		if not self.disconnected:
+			self.disconnect()
+			self.disconnected = True
 
 	def presence_available(self, presence):
 		"""Presence handler function for pyxmpp."""
@@ -41,7 +48,7 @@ class SendJabberClient(pyxmpp.jabber.client.JabberClient):
 			return
 		self.stream.send(self.message)
 		self.failure = None
-		self.disconnect()
+		self.disconnect_once()
 
 	def session_started(self):
 		"""pyxmpp API method"""
@@ -59,7 +66,7 @@ class SendJabberClient(pyxmpp.jabber.client.JabberClient):
 			self.failure = pynotifyd.PyNotifyDPermanentError(
 					"contact is not my roster")
 			# not on roster
-			self.disconnect()
+			self.disconnect_once()
 
 	def loop_timeout(self, timeout):
 		"""
@@ -136,6 +143,7 @@ class ProviderJabber(pynotifyd.providers.ProviderBase):
 				exclude_resources.__contains__, include_states.__contains__)
 		client.connect()
 		client.loop_timeout(self.timeout)
+		client.disconnect_once()
 		if client.failure:
 			raise client.failure
 
