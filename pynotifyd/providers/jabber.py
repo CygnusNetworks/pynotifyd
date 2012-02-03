@@ -26,13 +26,13 @@ class SendJabberClient(pyxmpp.jabber.client.JabberClient):
 		self.include_states = include_states
 		self.failure = pynotifyd.PyNotifyDTemporaryError(
 				"contact not available")
-		self.disconnected = False
+		self.isdisconnected = False
 
 	def disconnect_once(self):
 		"""Invoke disconnect on the first call of this method."""
-		if not self.disconnected:
+		if not self.isdisconnected:
 			self.disconnect()
-			self.disconnected = True
+			self.isdisconnected = True
 
 	def presence_available(self, presence):
 		"""Presence handler function for pyxmpp."""
