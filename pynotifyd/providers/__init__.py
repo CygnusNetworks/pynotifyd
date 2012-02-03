@@ -14,6 +14,11 @@ class ProviderBase:
 		"""
 		raise NotImplementedError
 
+	def terminate(self):
+		"""This virtuall function is called during shutdown and can be
+		overriden by provider instances to free up resources."""
+		pass
+
 class SMSProviderBase(ProviderBase):
 	"""Somehow send the message as sms.
 
