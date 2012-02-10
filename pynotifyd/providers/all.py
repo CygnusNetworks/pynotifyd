@@ -4,6 +4,7 @@ from pynotifyd.providers.shell import ProviderShell
 from pynotifyd.providers.mock import ProviderMock
 from pynotifyd.providers.jabber import ProviderJabber
 from pynotifyd.providers.mail import ProviderMail
+from pynotifyd.providers.persistentjabber import ProviderPersistentJabber
 
 __all__ = ["ProviderDevelopergarden", "ProviderSipgate", "ProviderShell",
 		"ProviderMock", "ProviderJabber", "ProviderMail"]
@@ -15,5 +16,6 @@ provider_drivers = dict(
 		shell=ProviderShell,
 		mock=ProviderMock,
 		jabber=ProviderJabber,
-		mail=ProviderMail)
+		mail=ProviderMail,
+		persistentjabber=ProviderPersistentJabber)
 
