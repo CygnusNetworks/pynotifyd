@@ -5,12 +5,12 @@ Standards-Version: 3.8.0
 Section: python
 Priority: extra
 Build-Depends: debhelper (>= 7), python
-XS-Python-Version: >= 2.5
+XS-Python-Version: >= 2.6
 
 Package: python-pynotifyd
 Architecture: all
-Depends: python (>= 2.5), python-configobj, ${python:Depends}, ${misc:Depends},
- python-pyinotify, python-pyxmpp, python-cjson | python-json | python (>= 2.6)
+Depends: python (>= 2.6), python-configobj, ${python:Depends}, ${misc:Depends},
+ python-pyinotify, python-pyxmpp
 XB-Python-Version: ${python:Versions}
 Recommends: python-setproctitle
 Description: Python Notification Daemon

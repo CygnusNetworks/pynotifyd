@@ -1,3 +1,10 @@
+pynotifyd (0.6-1) stable; urgency=low
+
+  [ Helmut Grohne ]
+  * Implemented persistentjabber provider
+
+ -- Torge Szczepanek <info@cygnusnetworks.de>  Thu, 16 Feb 2012 11:52:03 +0100
+
 pynotifyd (0.5-4) stable; urgency=low
 
   [ Helmut Grohne ]
