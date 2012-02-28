@@ -70,7 +70,7 @@ class SendJabberClient(pyxmpp.jabber.client.JabberClient):
 
 	def loop_timeout(self, timeout):
 		"""
-		@type timeout: int or str
+		@type timeout: int
 		"""
 		now = time.time()
 		deadline = now + timeout
