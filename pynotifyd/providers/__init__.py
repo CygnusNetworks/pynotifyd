@@ -5,7 +5,7 @@ __all__ = []
 __all__.append("ProviderBase")
 class ProviderBase:
 	def sendmessage(self, recipient, message):
-		"""This virtual function is to be overriden by provider
+		"""This virtual function is to be overridden by provider
 		implementations.
 
 		@type recipient: {str: str}
@@ -15,8 +15,8 @@ class ProviderBase:
 		raise NotImplementedError
 
 	def terminate(self):
-		"""This virtuall function is called during shutdown and can be
-		overriden by provider instances to free up resources."""
+		"""This virtual function is called during shutdown and can be
+		overridden by provider instances to free up resources."""
 		pass
 
 class SMSProviderBase(ProviderBase):
@@ -43,7 +43,7 @@ class SMSProviderBase(ProviderBase):
 					"option  requires an integer parameter")
 
 	def sendsms(self, phone, message):
-		"""This virtual function is to be overriden by sms proivder
+		"""This virtual function is to be overridden by sms proivder
 		implementations.
 
 		@type phone: str
