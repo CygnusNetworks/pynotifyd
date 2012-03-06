@@ -107,9 +107,22 @@ class SendPing:
 		return time.time() - self.sent
 
 class PersistentJabberClient(pyxmpp.jabber.client.JabberClient, threading.Thread):
-	"""
-	@type contacts: {JID: {JID: unicode}}
-	@ivar contacts: Maps bare JIDs to resourceful JIDs to presence states.
+	"""Maintains a persistent jabber connection, presence states of contacts
+	and user defined per-resource settings.
+
+	Users may change their settings by sending messages:
+	 - "ignore": Further messages are pretended to be delivered without
+	   being delivered.
+	 - "disable": This resource will not receive further messages. Other ways
+	   of contacting the user are tried.
+	 - "normal": Reset configuration to normal delivery.
+
+	Once a user goes offline or pynotifyd is restarted these settings are reset
+	back to "normal".
+
+	@type contacts: {JID: {JID: (unicode, unicode)}}
+	@ivar contacts: Maps bare JIDs to resourceful JIDs to presence settings
+		and states. Possible settings are (u"normal", u"ignore", u"disable").
 		Accessed by multiple threads.
 	@type connection_is_usable: bool
 	@ivar connection_is_usable: False when the connection is known to be dead.
@@ -142,7 +155,7 @@ class PersistentJabberClient(pyxmpp.jabber.client.JabberClient, threading.Thread
 		jid = presence.get_from_jid()
 		with self.client_lock:
 			inner = self.contacts.setdefault(jid.bare(), dict())
-			inner[jid] = status
+			inner[jid] = (u"normal", status)
 
 	def handle_presence_unavailable(self, presence):
 		"""Presence handler function for pyxmpp."""
@@ -156,11 +169,25 @@ class PersistentJabberClient(pyxmpp.jabber.client.JabberClient, threading.Thread
 			except KeyError:
 				pass
 
+	def handle_message_normal(self, stanza):
+		"""Messsage handler function for pyxmpp."""
+		jid = stanza.get_from()
+		body = stanza.get_body()
+		if body not in (u"normal", u"ignore", u"disable"):
+			return
+		with self.client_lock:
+			try:
+				inner = self.contacts[jid.bare()] # raises KeyError
+				inner[jid] = (body, inner[jid][1]) # raises KeyError
+			except KeyError:
+				pass
+
 	### Section: pyxmpp JabberClient API methods
 	def session_started(self):
 		"""pyxmpp API method"""
 		self.stream.set_presence_handler("available", self.handle_presence_available)
 		self.stream.set_presence_handler("unavailable", self.handle_presence_unavailable)
+		self.stream.set_message_handler("normal", self.handle_message_normal)
 		self.request_roster()
 		self.stream.send(pyxmpp.presence.Presence())
 
@@ -282,14 +309,22 @@ class PersistentJabberClient(pyxmpp.jabber.client.JabberClient, threading.Thread
 				raise pynotifyd.PyNotifyDTemporaryError(
 						"target contact is offline")
 			deliver = []
-			for jid, state in inner.items():
+			for jid, (settings, state) in inner.items():
+				if settings == u"disable":
+					continue
 				if exclude_resources(jid.resource):
 					continue
 				if not include_states(state):
 					continue
-				deliver.append(pyxmpp.message.Message(to_jid=jid, body=message))
+				if settings == u"ignore":
+					# Do not trigger temporary errors.
+					deliver.append(None)
+				else:
+					deliver.append(pyxmpp.message.Message(to_jid=jid,
+						body=message))
 		for message in deliver:
-			self.stream.send(message)
+			if message is not None:
+				self.stream.send(message)
 		if not deliver:
 			raise pynotifyd.PyNotifyDTemporaryError(
 					"no usable resources/states found for contact")
