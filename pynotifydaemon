@@ -16,8 +16,11 @@ except ImportError:
 	def setproctitle(_):
 		die("Cannot set process title: setproctitle module not found.")
 
-def die(message):
+def logstderr(message):
 	sys.stderr.write(message + "\n")
+
+def die(message):
+	logstderr(message)
 	sys.exit(1)
 
 def die_exc(exception):
@@ -152,7 +155,10 @@ def main():
 	except pynotifyd.PyNotifyDError, err:
 		die_exc(err)
 
-	debuglog = partial_apply(syslog.syslog, syslog.LOG_DEBUG)
+	if options.foreground:
+		debuglog = logstderr
+	else:
+		debuglog = partial_apply(syslog.syslog, syslog.LOG_DEBUG)
 
 	# startup finished: terminate parent
 	if not options.foreground:
