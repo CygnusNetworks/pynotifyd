@@ -65,6 +65,10 @@ class QueueEntry:
 		return int(self.parts[1], 16)
 
 	@property
+	def entryid(self):
+		return self.parts[2]
+
+	@property
 	def istemporary(self):
 		return len(self.parts) != 3
 
