@@ -33,6 +33,7 @@ class QueueEntry:
 		else:
 			self.filename = filename_or_parts
 			self.parts = filename_or_parts.split(".")
+		assert len(self.parts) >= 3
 
 	@classmethod
 	def new(cls):
@@ -47,6 +48,8 @@ class QueueEntry:
 		@param state: copy state if None, otherwise set state
 		@rtype: QueueEntry
 		"""
+		assert isinstance(wait, int)
+		assert state is None or isinstance(state, int)
 		parts = [
 				"%x" % (max(time.time(), self.deadline) + wait),
 				self.parts[1] if state is None else "%x" % state
