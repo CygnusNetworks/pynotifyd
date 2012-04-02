@@ -116,6 +116,7 @@ class PersistentJabberClient(pyxmpp.jabber.client.JabberClient, threading.Thread
 	 - "disable": This resource will not receive further messages. Other ways
 	   of contacting the user are tried.
 	 - "normal": Reset configuration to normal delivery.
+	 - "help": Print help text.
 
 	Once a user goes offline or pynotifyd is restarted these settings are reset
 	back to "normal".
@@ -128,7 +129,7 @@ class PersistentJabberClient(pyxmpp.jabber.client.JabberClient, threading.Thread
 	@ivar connection_is_usable: False when the connection is known to be dead.
 		Accessed by multiple threads, but only locked by writers, because it
 		reading is racy in any case.
-	@type last_ping: Nonr or SendPing
+	@type last_ping: None or SendPing
 	@ivar last_ping: A SendPing instance for measuring the availability of the
 		connection. Accessed by multiple threads.
 	"""
@@ -172,7 +173,21 @@ class PersistentJabberClient(pyxmpp.jabber.client.JabberClient, threading.Thread
 	def handle_message_normal(self, stanza):
 		"""Messsage handler function for pyxmpp."""
 		jid = stanza.get_from()
+		with self.client_lock:
+			try:
+				self.contacts[jid.bare()][jid] # raises KeyError
+			except KeyError:
+				return # only accept messages from known clients
 		body = stanza.get_body()
+		if body == u"help":
+			helpmessage = u"""Valid commands:
+ - "ignore": Further messages are pretended to be delivered without being delivered.
+ - "disable": This resource will not receive further messages. Other ways of contacting the user are tried.
+ - "normal": Reset configuration to normal delivery.
+ - "help": Print this help text.
+"""
+			self.stream.send(pyxmpp.message.Message(to_jid=jid, body=helpmessage))
+			return
 		if body not in (u"normal", u"ignore", u"disable"):
 			return
 		with self.client_lock:
