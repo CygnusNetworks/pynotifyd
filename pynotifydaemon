@@ -110,18 +110,6 @@ def main():
 
 	try:
 		config = pynotifyd.read_config(options.configfile)
-
-		queue = pynotifyd.queue.PersistentQueue(config["general"]["queuedir"],
-				config["general"]["retry"])
-
-		providers = {}
-		for name, section in config["providers"].items():
-			try:
-				providers[name] = pynotifyd.providers.all.provider_drivers \
-						[section["driver"]](section)
-			except pynotifyd.PyNotifyDError, err:
-				err.args = err.args + ("in provider %s" % name,)
-				raise err
 	except pynotifyd.PyNotifyDError, err:
 		die_exc(err)
 
@@ -137,16 +125,31 @@ def main():
 	else:
 		die("unknown notify method %r" % config["general"]["notify"])
 
+	if not options.foreground:
+		old_stderr = sys.stderr
+		sys.stderr = daemonize()
+
+	try:
+		queue = pynotifyd.queue.PersistentQueue(config["general"]["queuedir"],
+				config["general"]["retry"])
+
+		providers = {}
+		for name, section in config["providers"].items():
+			try:
+				providers[name] = pynotifyd.providers.all.provider_drivers \
+						[section["driver"]](section)
+			except pynotifyd.PyNotifyDError, err:
+				err.args = err.args + ("in provider %s" % name,)
+				raise err
+	except pynotifyd.PyNotifyDError, err:
+		die_exc(err)
+
 	if config["general"].get("proctitle"):
 		setproctitle(config["general"]["proctitle"])
 
 	dw = dw(config["general"]["queuedir"])
 
 	syslog.openlog("pynotifyd")
-
-	if not options.foreground:
-		old_stderr = sys.stderr
-		sys.stderr = daemonize()
 
 	try:
 		queue.lock()
@@ -183,6 +186,14 @@ def main():
 			dw(wait)
 		debuglog("terminating due to SIGTERM")
 	finally:
+		for name, provider in providers.items():
+			debuglog("terminating provider %s" % name)
+			try:
+				provider.terminate()
+			except Exception, exc:
+				syslog.syslog(syslog.LOG_ERR, "failed to terminate provider " +
+						"%s with %s: %s" %
+						(name, exc.__class__.__name__, str(exc)))
 		queue.unlock()
 
 if __name__ == '__main__':
