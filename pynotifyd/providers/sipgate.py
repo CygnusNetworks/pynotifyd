@@ -12,12 +12,15 @@ class ProviderSipgate(pynotifyd.providers.SMSProviderBase):
 	Required configuration options:
 		- username
 		- password
+	Optional configuration options:
+		- api (values: basic, plus or team, default: basic)
 
 	See also L{SMSProviderBase}.
 	"""
 	# Provider documentation can be found at:
 	# http://www.sipgate.de/img/sipgate_api_documentation.pdf
-	baseurl = "https://%(username)s:%(password)s@samurai.sipgate.net/RPC2"
+	basicurl = "https://%(username)s:%(password)s@samurai.sipgate.net/RPC2"
+	teamurl = "https://%(username)s:%(password)s@api.sipgate.net/RPC2"
 	identify_client_name = "PyNotifyD"
 
 	def __init__(self, config):
@@ -27,8 +30,12 @@ class ProviderSipgate(pynotifyd.providers.SMSProviderBase):
 		@raises PyNotifyDConfigurationError:
 		"""
 		pynotifyd.providers.SMSProviderBase.__init__(self, config)
+		api = config.get("api", "basic").strip().lower()
+		if api not in ("basic", "plus", "team"):
+			raise pynotifyd.PyNotifyDConfigurationError("invalid value for api")
+		baseurl = self.teamurl if api == "team" else self.basicurl
 		try:
-			url = self.baseurl % dict(
+			url = baseurl % dict(
 					username=urllib.quote(config["username"], ""),
 					password=urllib.quote(config["password"], ""))
 		except KeyError:
