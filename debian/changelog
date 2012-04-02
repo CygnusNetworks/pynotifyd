@@ -1,3 +1,9 @@
+pynotifyd (0.7-1) stable; urgency=low
+
+  * Fix sipgate api.
+
+ -- Helmut Grohne <h.grohne@cygnusnetworks.de>  Mon, 02 Apr 2012 17:44:50 +0200
+
 pynotifyd (0.6-1) stable; urgency=low
 
   [ Helmut Grohne ]
