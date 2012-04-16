@@ -121,6 +121,8 @@ class PersistentJabberClient(pyxmpp.jabber.client.JabberClient, threading.Thread
 	Once a user goes offline or pynotifyd is restarted these settings are reset
 	back to "normal".
 
+	Users of ejabberd need to enable mod_ping.
+
 	@type contacts: {JID: {JID: (unicode, unicode)}}
 	@ivar contacts: Maps bare JIDs to resourceful JIDs to presence settings
 		and states. Possible settings are (u"normal", u"ignore", u"disable").
