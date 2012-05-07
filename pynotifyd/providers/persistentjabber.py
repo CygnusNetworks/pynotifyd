@@ -1,5 +1,3 @@
-#!/usr/bin/env python
-
 from __future__ import with_statement
 import os
 import select
@@ -15,6 +13,7 @@ import pyxmpp.iq
 
 import pynotifyd
 import pynotifyd.providers
+from pynotifyd.providers.jabbercommon import BaseJabberClient, validate_recipient
 
 __all__ = []
 
@@ -106,7 +105,7 @@ class SendPing:
 		"""
 		return time.time() - self.sent
 
-class PersistentJabberClient(pyxmpp.jabber.client.JabberClient, threading.Thread):
+class PersistentJabberClient(BaseJabberClient, threading.Thread):
 	"""Maintains a persistent jabber connection, presence states of contacts
 	and user defined per-resource settings.
 
@@ -140,7 +139,7 @@ class PersistentJabberClient(pyxmpp.jabber.client.JabberClient, threading.Thread
 		@type jid: pyxmpp.jid.JID
 		@type password: str
 		"""
-		pyxmpp.jabber.client.JabberClient.__init__(self, jid, password)
+		BaseJabberClient.__init__(self, jid, password)
 		threading.Thread.__init__(self)
 		self.ping_max_age = ping_max_age
 		self.ping_timeout = ping_timeout
@@ -152,26 +151,6 @@ class PersistentJabberClient(pyxmpp.jabber.client.JabberClient, threading.Thread
 		self.last_ping = None
 
 	### Section: handler methods passed to pyxmpp
-	def handle_presence_available(self, presence):
-		"""Presence handler function for pyxmpp."""
-		status = presence.get_show() or u"online"
-		jid = presence.get_from_jid()
-		with self.client_lock:
-			inner = self.contacts.setdefault(jid.bare(), dict())
-			inner[jid] = (u"normal", status)
-
-	def handle_presence_unavailable(self, presence):
-		"""Presence handler function for pyxmpp."""
-		jid = presence.get_from_jid()
-		with self.client_lock:
-			try:
-				inner = self.contacts[jid.bare()] # raises KeyError
-				del inner[jid] # raises KeyError
-				if not inner:
-					del self.contacts[jid.bare()]
-			except KeyError:
-				pass
-
 	def handle_message_normal(self, stanza):
 		"""Messsage handler function for pyxmpp."""
 		jid = stanza.get_from()
@@ -199,15 +178,26 @@ class PersistentJabberClient(pyxmpp.jabber.client.JabberClient, threading.Thread
 			except KeyError:
 				pass
 
-	### Section: pyxmpp JabberClient API methods
-	def session_started(self):
-		"""pyxmpp API method"""
-		self.stream.set_presence_handler("available", self.handle_presence_available)
-		self.stream.set_presence_handler("unavailable", self.handle_presence_unavailable)
+	### Section: BaseJabberClient API methods
+	def handle_session_started(self):
 		self.stream.set_message_handler("normal", self.handle_message_normal)
-		self.request_roster()
-		self.stream.send(pyxmpp.presence.Presence())
 
+	def handle_contact_available(self, jid, state):
+		with self.client_lock:
+			inner = self.contacts.setdefault(jid.bare(), dict())
+			inner[jid] = (u"normal", state)
+
+	def handle_contact_unavailable(self, jid):
+		with self.client_lock:
+			try:
+				inner = self.contacts[jid.bare()] # raises KeyError
+				del inner[jid] # raises KeyError
+				if not inner:
+					del self.contacts[jid.bare()]
+			except KeyError:
+				pass
+
+	### Section: pyxmpp JabberClient API methods
 	def roster_updated(self, item=None):
 		"""pyxmpp API method"""
 		if item is not None:
@@ -299,14 +289,13 @@ class PersistentJabberClient(pyxmpp.jabber.client.JabberClient, threading.Thread
 
 	def send_message(self, target, message, exclude_resources, include_states):
 		"""
-		@type target: str
+		@type target: pyxmpp.jid.JID
 		@type message: str
 		@type exclude_resources: str -> bool
 		@type include_states: str -> bool
 		@raises PyNotifyDPermanentError:
 		@raises PyNotifyDTemporaryError:
 		"""
-		target = pyxmpp.jid.JID(target)
 		if not self.connection_is_usable: # unlocked access, this is racy in any case
 			raise pynotifyd.PyNotifyDTemporaryError(
 					"jabber client connection is not ready")
@@ -346,15 +335,6 @@ class PersistentJabberClient(pyxmpp.jabber.client.JabberClient, threading.Thread
 			raise pynotifyd.PyNotifyDTemporaryError(
 					"no usable resources/states found for contact")
 
-def make_set(value):
-	if isinstance(value, list):
-		pass # ok
-	elif isinstance(value, str):
-		value = map(str.strip, value.split(","))
-	else:
-		raise ValueError("invalid value type")
-	return set(value)
-
 __all__.append("ProviderPersistentJabber")
 class ProviderPersistentJabber(pynotifyd.providers.ProviderBase):
 	"""Send a jabber message.
@@ -382,28 +362,7 @@ class ProviderPersistentJabber(pynotifyd.providers.ProviderBase):
 		self.client_thread.start()
 
 	def sendmessage(self, recipient, message):
-		try:
-			jid = recipient["jabber"]
-		except KeyError:
-			raise pynotifyd.PyNotifyDConfigurationError(
-					"missing jabber on contact")
-		try:
-			exclude_resources = make_set(recipient["jabber_exclude_resources"])
-		except KeyError:
-			exclude_resources = set()
-		except ValueError, err:
-			raise pynotifyd.PyNotifyDConfigurationError(
-					"invalid value for jabber_exclude_resources: %s" % str(err))
-		try:
-			include_states = make_set(recipient["jabber_include_states"])
-		except KeyError:
-			include_states = set(["online"])
-		except ValueError:
-			raise pynotifyd.PyNotifyDConfigurationError(
-					"invalid value for jabber_include_states: %s" % str(err))
-		if not include_states:
-			raise pynotifyd.PyNotifyDConfigurationError(
-					"jabber_include_states is empty")
+		jid, exclude_resources, include_states = validate_recipient(recipient)
 		# The following raises a number of pynotifyd exceptions.
 		self.client_thread.send_message(jid, message,
 				exclude_resources.__contains__, include_states.__contains__)

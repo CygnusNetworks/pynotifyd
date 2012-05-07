@@ -5,22 +5,23 @@ import pyxmpp.presence
 import time
 import pynotifyd
 import pynotifyd.providers
+from pynotifyd.providers.jabbercommon import BaseJabberClient, validate_recipient
 
 __all__ = []
 
-class SendJabberClient(pyxmpp.jabber.client.JabberClient):
+class SendJabberClient(BaseJabberClient):
 	def __init__(self, jid, password, target, message, exclude_resources,
 			include_states):
 		"""
 		@type jid: pyxmpp.jid.JID
 		@type password: str
-		@type target: str
+		@type target: pyxmpp.jid.JID
 		@type message: str
 		@type exclude_resources: str -> bool
 		@type include_states: str -> bool
 		"""
-		pyxmpp.jabber.client.JabberClient.__init__(self, jid, password)
-		self.target = pyxmpp.jid.JID(target)
+		BaseJabberClient.__init__(self, jid, password)
+		self.target = target
 		self.message = pyxmpp.message.Message(to_jid=self.target, body=message)
 		self.exclude_resources = exclude_resources
 		self.include_states = include_states
@@ -28,34 +29,19 @@ class SendJabberClient(pyxmpp.jabber.client.JabberClient):
 				"contact not available")
 		self.isdisconnected = False
 
-	def disconnect_once(self):
-		"""Invoke disconnect on the first call of this method."""
-		if not self.isdisconnected:
-			self.disconnect()
-			self.isdisconnected = True
-
-	def presence_available(self, presence):
-		"""Presence handler function for pyxmpp."""
-		jid = presence.get_from_jid()
+	### Section: BaseJabberClient API methods
+	def handle_contact_available(self, jid, state):
 		if jid.bare() != self.target.bare():
 			return
 		if self.exclude_resources(jid.resource):
 			return
-		show = presence.get_show()
-		if show is None:
-			show = "online"
-		if not self.include_states(show):
+		if not self.include_states(state):
 			return
 		self.stream.send(self.message)
 		self.failure = None
 		self.disconnect_once()
 
-	def session_started(self):
-		"""pyxmpp API method"""
-		self.stream.set_presence_handler("available", self.presence_available)
-		self.request_roster()
-		self.stream.send(pyxmpp.presence.Presence())
-
+	### Section: pyxmpp JabberClient API methods
 	def roster_updated(self, item=None):
 		"""pyxmpp API method"""
 		if item is not None:
@@ -68,6 +54,13 @@ class SendJabberClient(pyxmpp.jabber.client.JabberClient):
 			# not on roster
 			self.disconnect_once()
 
+	### Section: our own methods for controlling the JabberClient
+	def disconnect_once(self):
+		"""Invoke disconnect on the first call of this method."""
+		if not self.isdisconnected:
+			self.disconnect()
+			self.isdisconnected = True
+
 	def loop_timeout(self, timeout):
 		"""
 		@type timeout: int
@@ -79,15 +72,6 @@ class SendJabberClient(pyxmpp.jabber.client.JabberClient):
 			stream.loop_iter(deadline - now)
 			stream = self.get_stream()
 			now = time.time()
-
-def make_set(value):
-	if isinstance(value, list):
-		pass # ok
-	elif isinstance(value, str):
-		value = map(str.strip, value.split(","))
-	else:
-		raise ValueError("invalid value type")
-	return set(value)
 
 __all__.append("ProviderJabber")
 class ProviderJabber(pynotifyd.providers.ProviderBase):
@@ -117,28 +101,7 @@ class ProviderJabber(pynotifyd.providers.ProviderBase):
 		self.timeout = int(config["timeout"])
 
 	def sendmessage(self, recipient, message):
-		try:
-			jid = recipient["jabber"]
-		except KeyError:
-			raise pynotifyd.PyNotifyDConfigurationError(
-					"missing jabber on contact")
-		try:
-			exclude_resources = make_set(recipient["jabber_exclude_resources"])
-		except KeyError:
-			exclude_resources = set()
-		except ValueError, err:
-			raise pynotifyd.PyNotifyDConfigurationError(
-					"invalid value for jabber_exclude_resources: %s" % str(err))
-		try:
-			include_states = make_set(recipient["jabber_include_states"])
-		except KeyError:
-			include_states = set(["online"])
-		except ValueError:
-			raise pynotifyd.PyNotifyDConfigurationError(
-					"invalid value for jabber_include_states: %s" % str(err))
-		if not include_states:
-			raise pynotifyd.PyNotifyDConfigurationError(
-					"jabber_include_states is empty")
+		jid, exclude_resources, include_states = validate_recipient(recipient)
 		client = SendJabberClient(self.jid, self.password, jid, message,
 				exclude_resources.__contains__, include_states.__contains__)
 		client.connect()
