@@ -1,4 +1,5 @@
 from __future__ import with_statement
+import logging
 import random
 import time
 import os
@@ -6,6 +7,8 @@ import pynotifyd
 from pynotifyd.processlock import ProcessLock
 
 __all__ = []
+
+logger = logging.getLogger("pynotifyd.queue")
 
 def generate_unique_id():
 	"""Generate a unique identifier.
@@ -228,13 +231,11 @@ class PersistentQueue:
 
 
 __all__.append("process_queue_step")
-def process_queue_step(config, queue, providers, logfun=lambda _:None):
+def process_queue_step(config, queue, providers):
 	"""
 	@type config: configobj.ConfigObj
 	@type queue: PersistentQueue
 	@type providers: {str: ProviderBase}
-	@type logfun: str -> None
-	@param logfun: is called with log messages
 	@rtype: int or None
 	@returns: None if the queue is empty, number of seconds to sleep
 			before calling this function again otherwise
@@ -247,31 +248,31 @@ def process_queue_step(config, queue, providers, logfun=lambda _:None):
 		return sleep_time
 	providername = queue.get_state(entry)
 	if providername == "GIVEUP":
-		logfun("giving up on entry %s" % str(entry))
+		logger.debug("giving up on entry %s" % str(entry))
 		queue.entry_done(entry)
 		return 0
 	contactname, message = queue.get_contents(entry)
 	recipient = dict(name=contactname)
 	recipient.update(config["contacts"][contactname])
-	logfun("delivering entry %s to %s using %s" %
+	logger.debug("delivering entry %s to %s using %s" %
 			(str(entry), contactname, providername))
 	try:
 		providers[providername].sendmessage(recipient, message)
 	except pynotifyd.PyNotifyDPermanentError, err:
-		logfun("delivery of %s to %s using %s failed with permanent error: %s" %
+		logger.debug("delivery of %s to %s using %s failed with permanent error: %s" %
 				(str(entry), contactname, providername, str(err)))
 		queue.entry_next(entry, fast=True)
 	except pynotifyd.PyNotifyDTemporaryError, err:
-		logfun("delivery of %s to %s using %s failed with temporary error: %s" %
+		logger.debug("delivery of %s to %s using %s failed with temporary error: %s" %
 				(str(entry), contactname, providername, str(err)))
 		queue.entry_next(entry)
 	except Exception, exc:
-		logfun(("delivery of %s to %s using %s failed with an UNKNOWN " +
+		logger.debug(("delivery of %s to %s using %s failed with an UNKNOWN " +
 				"EXCEPTION: %s  %s") % (str(entry), contactname, providername,
 					exc.__class__.__name__, str(exc)))
 		queue.entry_next(entry)
 	else:
-		logfun("delivery of %s to %s using %s succeeded" %
+		logger.debug("delivery of %s to %s using %s succeeded" %
 				(str(entry), contactname, providername))
 		queue.entry_done(entry)
 	return 0

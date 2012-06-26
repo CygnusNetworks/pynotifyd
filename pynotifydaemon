@@ -1,9 +1,20 @@
 #!/usr/bin/python
 
+# The following snippet has to occur before anyone uses the logging module.
+try:
+	import pyinotify
+except ImportError:
+	pass
+else:
+	# Now pyinoty has called its log_init and fucked the GLOBAL LOGGER CLASS.
+	import logging
+	logging.setLoggerClass(logging.Logger)
+
 import pynotifyd
 import pynotifyd.queue
 import pynotifyd.providers.all
-import syslog
+import logging
+import logging.handlers
 from optparse import OptionParser
 import sys
 import os
@@ -15,6 +26,8 @@ try:
 except ImportError:
 	def setproctitle(_):
 		die("Cannot set process title: setproctitle module not found.")
+
+logger = logging.getLogger("pynotifyd.daemon")
 
 def logstderr(message):
 	sys.stderr.write(message + "\n")
@@ -94,6 +107,12 @@ def chuid(user):
 	if os.getuid() != user:
 		die("uid unchanged after setuid()")
 
+def syslog_handler(ident):
+	sysloghand = logging.handlers.SysLogHandler(address="/dev/log")
+	logformat = "%s[%%(process)s]: %%(message)s" % (ident,)
+	sysloghand.setFormatter(logging.Formatter(logformat))
+	return sysloghand
+
 def main():
 	def_config = "/etc/pynotifyd.conf"
 	parser = OptionParser(usage="Usage: %prog [options]")
@@ -104,6 +123,13 @@ def main():
 	parser.add_option("--clearqueue", dest="clearqueue", default=False,
 			help="clear the queue prior to starting up", action="store_true")
 	options, args = parser.parse_args()
+
+	mainlogger = logging.getLogger("pynotifyd")
+	mainlogger.setLevel(logging.DEBUG)
+	if options.foreground:
+		mainlogger.addHandler(logging.StreamHandler(sys.stderr))
+	else:
+		mainlogger.addHandler(syslog_handler("pynotifyd"))
 
 	if args:
 		die("unrecognized non-option parameters were passed")
@@ -149,19 +175,12 @@ def main():
 
 	dw = dw(config["general"]["queuedir"])
 
-	syslog.openlog("pynotifyd")
-
 	try:
 		queue.lock()
 		if options.clearqueue:
 			queue.clear()
 	except pynotifyd.PyNotifyDError, err:
 		die_exc(err)
-
-	if options.foreground:
-		debuglog = logstderr
-	else:
-		debuglog = partial_apply(syslog.syslog, syslog.LOG_DEBUG)
 
 	# startup finished: terminate parent
 	if not options.foreground:
@@ -174,25 +193,23 @@ def main():
 			running[0] = False
 		signal.signal(signal.SIGTERM, terminate)
 		while running[0]:
-			debuglog("processing next event")
-			wait = pynotifyd.queue.process_queue_step(config, queue, providers,
-					debuglog)
+			logger.debug("processing next event")
+			wait = pynotifyd.queue.process_queue_step(config, queue, providers)
 			if wait == 0:
 				continue
 			if wait is None:
-				debuglog("queue empty, sleeping ")
+				logger.debug("queue empty, sleeping ")
 			else:
-				debuglog("sleeping up to %d seconds" % wait)
+				logger.debug("sleeping up to %d seconds" % wait)
 			dw(wait)
-		debuglog("terminating due to SIGTERM")
+		logger.debug("terminating due to SIGTERM")
 	finally:
 		for name, provider in providers.items():
-			debuglog("terminating provider %s" % name)
+			logger.debug("terminating provider %s" % name)
 			try:
 				provider.terminate()
 			except Exception, exc:
-				syslog.syslog(syslog.LOG_ERR, "failed to terminate provider " +
-						"%s with %s: %s" %
+				logger.error("failed to terminate provider %s with %s: %s" %
 						(name, exc.__class__.__name__, str(exc)))
 		queue.unlock()
 
@@ -200,7 +217,6 @@ if __name__ == '__main__':
 	try:
 		main()
 	except Exception, exc:
-		syslog.openlog("pynotifyd")
-		syslog.syslog(syslog.LOG_ERR, "pynotifyd crashed with exception " +
-				"%s: %s" % (exc.__class__.__name__, str(exc)))
+		logger.error("pynotifyd crashed with exception %s: %s" %
+				(exc.__class__.__name__, str(exc)))
 		raise
