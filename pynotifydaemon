@@ -122,9 +122,12 @@ def main():
 			help="do not fork into background", action="store_true")
 	parser.add_option("--clearqueue", dest="clearqueue", default=False,
 			help="clear the queue prior to starting up", action="store_true")
+	parser.add_option("--debuglibs", default=False, dest="debuglibs",
+			help="include very verbose log message from all libraries employed",
+			action="store_true")
 	options, args = parser.parse_args()
 
-	mainlogger = logging.getLogger("pynotifyd")
+	mainlogger = logging.getLogger(None if options.debuglibs else "pynotifyd")
 	mainlogger.setLevel(logging.DEBUG)
 	if options.foreground:
 		mainlogger.addHandler(logging.StreamHandler(sys.stderr))
