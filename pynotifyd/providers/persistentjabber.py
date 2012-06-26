@@ -1,4 +1,5 @@
 from __future__ import with_statement
+import logging
 import os
 import select
 import threading
@@ -16,6 +17,13 @@ import pynotifyd.providers
 from pynotifyd.providers.jabbercommon import BaseJabberClient, validate_recipient
 
 __all__ = []
+
+logger = logging.getLogger("pynotifyd.providers.persistentjabber")
+
+def astr(obj):
+	"""Convert the given object to unicode and then to ascii replacing
+	non-printable characters."""
+	return unicode(obj).encode("ascii", "replace")
 
 class XMPPC2SPing(pyxmpp.iq.Iq):
 	"""Creates ping message from the passed jid to its server."""
@@ -183,11 +191,13 @@ class PersistentJabberClient(BaseJabberClient, threading.Thread):
 		self.stream.set_message_handler("normal", self.handle_message_normal)
 
 	def handle_contact_available(self, jid, state):
+		logger.debug("contact %s went online" % (astr(jid),))
 		with self.client_lock:
 			inner = self.contacts.setdefault(jid.bare(), dict())
 			inner[jid] = (u"normal", state)
 
 	def handle_contact_unavailable(self, jid):
+		logger.debug("contact %s went offline" % (astr(jid),))
 		with self.client_lock:
 			try:
 				inner = self.contacts[jid.bare()] # raises KeyError
@@ -195,7 +205,8 @@ class PersistentJabberClient(BaseJabberClient, threading.Thread):
 				if not inner:
 					del self.contacts[jid.bare()]
 			except KeyError:
-				pass
+				logger.info("could not find jid %s in my online list" %
+						(astr(jid),))
 
 	### Section: pyxmpp JabberClient API methods
 	def roster_updated(self, item=None):
