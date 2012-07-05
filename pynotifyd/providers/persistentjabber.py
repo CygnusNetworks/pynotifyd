@@ -8,7 +8,7 @@ import pyxmpp.exceptions
 import pyxmpp.jabber.client
 import pyxmpp.jid
 import pyxmpp.message
-import pyxmpp.presence
+from pyxmpp.presence import Presence
 import pyxmpp.iq
 
 import pynotifyd
@@ -174,9 +174,18 @@ class PersistentJabberClient(BaseJabberClient, threading.Thread):
 		with self.client_lock:
 			try:
 				inner = self.contacts[jid.bare()] # raises KeyError
-				inner[jid] = (body, inner[jid][1]) # raises KeyError
+				if inner[jid][0] == body: # raises KeyError
+					raise KeyError("no change needed")
+				inner[jid] = (body, inner[jid][1])
 			except KeyError:
 				pass
+			else:
+				statusmap = {
+					u"normal": None,
+					u"ignore": u"away",
+					u"disable": u"dnd"
+				}
+				self.stream.send(Presence(to_jid=jid, show=statusmap[body]))
 
 	### Section: BaseJabberClient API methods
 	def handle_session_started(self):
