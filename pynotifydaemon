@@ -182,7 +182,7 @@ def main():
 			if wait is None:
 				debuglog("queue empty, sleeping ")
 			else:
-				debuglog("sleeping up to %d seconds" % wait)
+				debuglog("sleeping up to %.1f seconds" % wait)
 			dw(wait)
 		debuglog("terminating due to SIGTERM")
 	finally:
