@@ -366,8 +366,11 @@ class ProviderPersistentJabber(pynotifyd.providers.ProviderBase):
 		"""
 		@type config: dict-like
 		"""
-		self.client_thread = PersistentJabberClient(
-				pyxmpp.jid.JID(config["jid"]), config["password"])
+		myjid = pyxmpp.jid.JID(config["jid"])
+		if myjid.node is None or myjid.resource is None: # pylint: disable=E1101
+			raise pynotifyd.PyNotifyDConfigurationError(
+					"jid must be of the form node@domain/resource")
+		self.client_thread = PersistentJabberClient(myjid, config["password"])
 		self.client_thread.start()
 
 	def sendmessage(self, recipient, message):
