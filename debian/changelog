@@ -1,3 +1,14 @@
+pynotifyd (0.8-1) stable; urgency=low
+
+  * Use python logging module for more flexible logging.
+  * Refactor jabber providers.
+  * Added documentation manual.rst.
+  * persistentjabber: Send personalized presence information.
+  * persistentjabber: Fix reconnection issue
+  * Cosmetics in log messages and more useful error messages.
+
+ -- Helmut Grohne <h.grohne@cygnusnetworks.de>  Tue, 21 Aug 2012 14:16:53 +0200
+
 pynotifyd (0.7-1) stable; urgency=low
 
   * Fix sipgate api.
