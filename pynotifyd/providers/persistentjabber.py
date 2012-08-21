@@ -229,7 +229,7 @@ class PersistentJabberClient(BaseJabberClient, threading.Thread):
 		@param maxwait: block up to this number of seconds to send a ping
 		@rtype: bool
 		"""
-		if not self.connection_usable:
+		if not self.connection_is_usable:
 			return False
 		with self.client_lock:
 			if self.last_ping is None or \
