@@ -26,6 +26,7 @@ DAEMON=/usr/bin/pynotifydaemon
 DAEMON_ARGS=
 PIDFILE=/var/run/$NAME.pid
 SCRIPTNAME=/etc/init.d/$PACKAGE
+PYNOTIFYD_CONFIG=/etc/pynotifyd.conf
 
 # Exit if the package is not installed
 [ -x "$DAEMON" ] || exit 0
@@ -33,9 +34,7 @@ SCRIPTNAME=/etc/init.d/$PACKAGE
 # Read configuration variable file if it is present
 [ -r /etc/default/$PACKAGE ] && . /etc/default/$PACKAGE
 
-case "$PYNOTIFYD_ENABLE" in
-	false|no|0) exit 0 ;;
-esac
+test -f "$PYNOTIFYD_CONFIG" || exit 0
 
 # Load the VERBOSE setting and other rcS variables
 . /lib/init/vars.sh
@@ -72,7 +71,7 @@ do_start()
 	#   2 if daemon could not be started
 	do_status && return 1
 
-	$DAEMON $DAEMON_ARGS
+	$DAEMON -c "$PYNOTIFYD_CONFIG" $DAEMON_ARGS
 	test "$?" = 0 && return 0
 	return 2
 }

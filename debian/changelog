@@ -1,3 +1,12 @@
+pynotifyd (0.8-2) stable; urgency=low
+
+  * Ship the configuration file as an example.
+  * Skip startup if configuration file is missing.
+  * Don't ship defaults file.
+    -> Enable daemon by creating /etc/pynotifyd.conf.
+
+ -- Helmut Grohne <h.grohne@cygnusnetworks.de>  Mon, 03 Sep 2012 15:32:49 +0200
+
 pynotifyd (0.8-1) stable; urgency=low
 
   * Use python logging module for more flexible logging.
