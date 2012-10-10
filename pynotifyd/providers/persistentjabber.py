@@ -162,11 +162,10 @@ class PersistentJabberClient(BaseJabberClient, threading.Thread):
 	def handle_message_normal(self, stanza):
 		"""Messsage handler function for pyxmpp."""
 		jid = stanza.get_from()
-		with self.client_lock:
-			try:
-				self.contacts[jid.bare()][jid] # raises KeyError
-			except KeyError:
-				return # only accept messages from known clients
+		try:
+			self.contacts[jid.bare()][jid] # raises KeyError
+		except KeyError:
+			return # only accept messages from known clients
 		body = stanza.get_body()
 		if body == u"help":
 			helpmessage = u"""Valid commands:
@@ -179,21 +178,20 @@ class PersistentJabberClient(BaseJabberClient, threading.Thread):
 			return
 		if body not in (u"normal", u"ignore", u"disable"):
 			return
-		with self.client_lock:
-			try:
-				inner = self.contacts[jid.bare()] # raises KeyError
-				if inner[jid][0] == body: # raises KeyError
-					raise KeyError("no change needed")
-				inner[jid] = (body, inner[jid][1])
-			except KeyError:
-				pass
-			else:
-				statusmap = {
-					u"normal": None,
-					u"ignore": u"away",
-					u"disable": u"dnd"
-				}
-				self.stream.send(Presence(to_jid=jid, show=statusmap[body]))
+		try:
+			inner = self.contacts[jid.bare()] # raises KeyError
+			if inner[jid][0] == body: # raises KeyError
+				raise KeyError("no change needed")
+			inner[jid] = (body, inner[jid][1])
+		except KeyError:
+			pass
+		else:
+			statusmap = {
+				u"normal": None,
+				u"ignore": u"away",
+				u"disable": u"dnd"
+			}
+			self.stream.send(Presence(to_jid=jid, show=statusmap[body]))
 
 	### Section: BaseJabberClient API methods
 	def handle_session_started(self):
@@ -201,30 +199,27 @@ class PersistentJabberClient(BaseJabberClient, threading.Thread):
 
 	def handle_contact_available(self, jid, state):
 		logger.debug("contact %s went online" % (astr(jid),))
-		with self.client_lock:
-			inner = self.contacts.setdefault(jid.bare(), dict())
-			inner[jid] = (u"normal", state)
+		inner = self.contacts.setdefault(jid.bare(), dict())
+		inner[jid] = (u"normal", state)
 
 	def handle_contact_unavailable(self, jid):
 		logger.debug("contact %s went offline" % (astr(jid),))
-		with self.client_lock:
-			try:
-				inner = self.contacts[jid.bare()] # raises KeyError
-				del inner[jid] # raises KeyError
-				if not inner:
-					del self.contacts[jid.bare()]
-			except KeyError:
-				logger.info("could not find jid %s in my online list" %
-						(astr(jid),))
+		try:
+			inner = self.contacts[jid.bare()] # raises KeyError
+			del inner[jid] # raises KeyError
+			if not inner:
+				del self.contacts[jid.bare()]
+		except KeyError:
+			logger.info("could not find jid %s in my online list" %
+					(astr(jid),))
 
 	### Section: pyxmpp JabberClient API methods
 	def roster_updated(self, item=None):
 		"""pyxmpp API method"""
 		if item is not None:
 			return
-		with self.client_lock:
-			self.connection_is_usable = True
-			self.connection_usable.notify_all()
+		self.connection_is_usable = True
+		self.connection_usable.notify_all()
 
 	### Section: our own methods for controlling the JabberClient
 	def __del__(self):
@@ -243,6 +238,8 @@ class PersistentJabberClient(BaseJabberClient, threading.Thread):
 		if not self.connection_is_usable:
 			return False
 		with self.client_lock:
+			if self.stream is None:
+				return False
 			if self.last_ping is None or \
 					self.last_ping.age() >= self.ping_max_age:
 				self.last_ping = SendPing(self, self.ping_timeout)
@@ -253,10 +250,9 @@ class PersistentJabberClient(BaseJabberClient, threading.Thread):
 		"""Tell the run method to reconnect immediately."""
 		# The connection is broken. Don't wait for a lock to signal that it
 		# is broken.
-		with self.client_lock:
-			if self.connection_is_usable:
-				self.connection_is_usable = False
-				os.write(self.reconnect_trigger_write, "\0")
+		if self.connection_is_usable:
+			self.connection_is_usable = False
+			os.write(self.reconnect_trigger_write, "\0")
 
 	def do_reconnect(self):
 		"""must not be called outside of run"""
@@ -289,23 +285,31 @@ class PersistentJabberClient(BaseJabberClient, threading.Thread):
 		cannot be used. Instead we add a pipe for signalling dead connections
 		between the threads and select both now, thus reimplementing the whole
 		thing."""
-		self.connect()
-		stream = self.get_stream()
-		while stream:
-			ifds, _, efds = select.select([stream.socket,
-				self.reconnect_trigger_read], [], [stream.socket], 60)
-			if self.reconnect_trigger_read in ifds:
-				os.read(self.reconnect_trigger_read, 1) # consume trigger
-				self.do_reconnect()
-			elif stream.socket in ifds or stream.socket in efds:
-				try:
-					stream.process()
-				except pyxmpp.exceptions.FatalStreamError:
-					self.connection_is_usable = False
-					self.do_reconnect()
-			else:
-				stream.idle()
+		self.client_lock.acquire()
+		try:
+			self.connect()
 			stream = self.get_stream()
+			while stream:
+				self.client_lock.release()
+				try:
+					ifds, _, efds = select.select([stream.socket,
+						self.reconnect_trigger_read], [], [stream.socket], 60)
+				finally:
+					self.client_lock.acquire()
+				if self.reconnect_trigger_read in ifds:
+					os.read(self.reconnect_trigger_read, 1) # consume trigger
+					self.do_reconnect()
+				elif stream.socket in ifds or stream.socket in efds:
+					try:
+						stream.process()
+					except pyxmpp.exceptions.FatalStreamError:
+						self.connection_is_usable = False
+						self.do_reconnect()
+				else:
+					stream.idle()
+				stream = self.get_stream()
+		finally:
+			self.client_lock.release()
 
 	def send_message(self, target, message, exclude_resources, include_states):
 		"""
