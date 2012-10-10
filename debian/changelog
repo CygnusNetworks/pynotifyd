@@ -1,3 +1,10 @@
+pynotifyd (0.8.3) stable; urgency=low
+
+  * Attempt to fix
+    AttributeError: 'NoneType' object has no attribute 'set_response_handlers'
+
+ -- Helmut Grohne <h.grohne@cygnusnetworks.de>  Wed, 10 Oct 2012 16:44:46 +0200
+
 pynotifyd (0.8-2) stable; urgency=low
 
   * Ship the configuration file as an example.
