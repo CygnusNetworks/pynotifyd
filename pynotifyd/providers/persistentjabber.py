@@ -354,6 +354,7 @@ class PersistentJabberClient(BaseJabberClient, threading.Thread):
 						body=message))
 		for message in deliver:
 			if message is not None:
+				logger.debug("Sending xmpp message to %r." % message.to_jid())
 				self.stream.send(message)
 		if not deliver:
 			raise pynotifyd.PyNotifyDTemporaryError(
