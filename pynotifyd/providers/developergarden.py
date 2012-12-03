@@ -34,6 +34,7 @@ try:
 except ImportError:
 	import json
 	try: # Python2.6 standard library
+		json.loads # pylint: disable=W0104
 		json_exception = ValueError
 		def decode_json(string):
 			try:
