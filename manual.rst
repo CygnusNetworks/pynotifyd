@@ -54,7 +54,9 @@ resources that should ignored when trying to reach the contact. This list is to
 be comma separated and put into the ``jabber_exclude_resources`` key. Similarly
 you can restrict the states that should be considered reachable by specifying
 them in the ``jabber_include_states`` key. Valid states are ``online``,
-``away``, ``chat``, ``dnd``, and ``xa``.
+``away``, ``chat``, ``dnd``, and ``xa``. After applying these filters multiple
+resources may be considered reachable. If that happens the message is sent to
+all of them individually.
 
 persistentjabber
 ~~~~~~~~~~~~~~~~
