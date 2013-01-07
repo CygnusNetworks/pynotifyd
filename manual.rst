@@ -49,6 +49,13 @@ Each contact wishing to use this driver must defined the ``jabber`` key to be a
 jabber account excluding resource. It must be formatted like ``account@server``.
 In addition you need to ensure that the contacts are on the provider's roster.
 
+Within the section of a particular contact you can optionally define a list of
+resources that should ignored when trying to reach the contact. This list is to
+be comma separated and put into the ``jabber_exclude_resources`` key. Similarly
+you can restrict the states that should be considered reachable by specifying
+them in the ``jabber_include_states`` key. Valid states are ``online``,
+``away``, ``chat``, ``dnd``, and ``xa``.
+
 persistentjabber
 ~~~~~~~~~~~~~~~~
 
@@ -58,3 +65,13 @@ both the ``driver`` section and the ``contact`` section. The timeout is not
 used, because the state of contacts is continuously tracked.
 
 When configuring an ejabberd server, you need to enable the mod_ping plugin.
+
+In addition a client can temporarily change its visibility to pynotifyd using
+chat commands. A resource can be temporarily marked as unreachable using the
+``disable`` command. Message delivery to this pynotifyd contact can be
+temporarily suppressed using the ``ignore`` command. The temporary override can
+be removed by logging out the issuing resource or using the ``normal`` command.
+A quick reference is available using the ``help`` command. The temporary
+override state is displayed as the availability of pynotifyd to the issuing
+resource. When message delivery is disabled, pynotifyd will appear as ``dnd``
+and when a resource is ignored pynotifyd will appear as ``away``.
