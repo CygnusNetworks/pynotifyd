@@ -46,7 +46,7 @@ def main():
 		token = dg.get_token()
 		result = getattr(dg, args[1])(token, *args[2:])
 		if result is not None:
-			print result
+			print(result)
 	except pynotifyd.PyNotifyDError, err:
 		die_exc(err)
 
