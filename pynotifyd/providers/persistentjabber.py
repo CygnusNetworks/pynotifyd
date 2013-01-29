@@ -141,8 +141,12 @@ class PersistentJabberClient(BaseJabberClient, threading.Thread):
 	@type last_ping: None or SendPing
 	@ivar last_ping: A SendPing instance for measuring the availability of the
 		connection. Accessed by multiple threads.
+	@type last_reconnect: float
+	@ivar last_reconnect: unix timestamp when the last reconnect was attempted
+		This varible is only accessed by the main thread and never by the
+		jabber client thread.
 	"""
-	def __init__(self, jid, password, ping_max_age=0, ping_timeout=10):
+	def __init__(self, jid, password, ping_max_age=0, ping_timeout=10, reconnect_timeout=60):
 		"""
 		@type jid: pyxmpp.jid.JID
 		@type password: str
@@ -151,7 +155,9 @@ class PersistentJabberClient(BaseJabberClient, threading.Thread):
 		threading.Thread.__init__(self)
 		self.ping_max_age = ping_max_age
 		self.ping_timeout = ping_timeout
+		self.reconnect_timeout = reconnect_timeout
 		self.reconnect_trigger_read, self.reconnect_trigger_write = os.pipe()
+		self.last_reconnect = 0
 		self.client_lock = threading.Lock()
 		self.connection_usable = threading.Condition(self.client_lock)
 		self.connection_is_usable = False
@@ -250,9 +256,18 @@ class PersistentJabberClient(BaseJabberClient, threading.Thread):
 		"""Tell the run method to reconnect immediately."""
 		# The connection is broken. Don't wait for a lock to signal that it
 		# is broken.
+		now = time.time()
 		if self.connection_is_usable:
-			self.connection_is_usable = False
-			os.write(self.reconnect_trigger_write, "\0")
+			logger.debug("Initiating jabber reconnect on usable connection.")
+		elif self.last_reconnect + self.reconnect_timeout < now:
+			logger.debug("Initiating reconnect because previous reconnect timed out.")
+		else:
+			logger.debug("Not initiating jabber reconnect after recent reconnect.")
+			return
+
+		self.connection_is_usable = False
+		os.write(self.reconnect_trigger_write, "\0")
+		self.last_reconnect = now
 
 	def do_reconnect(self):
 		"""must not be called outside of run"""
@@ -266,6 +281,7 @@ class PersistentJabberClient(BaseJabberClient, threading.Thread):
 					self.stream.close()
 				except pyxmpp.exceptions.FatalStreamError:
 					pass
+			logger.debug("Attempting to connect to jabber server.")
 			try:
 				self.connect()
 			except pyxmpp.exceptions.FatalStreamError:
@@ -321,6 +337,7 @@ class PersistentJabberClient(BaseJabberClient, threading.Thread):
 		@raises PyNotifyDTemporaryError:
 		"""
 		if not self.connection_is_usable: # unlocked access, this is racy in any case
+			self.initiate_reconnect()
 			raise pynotifyd.PyNotifyDTemporaryError(
 					"jabber client connection is not ready")
 		try:
