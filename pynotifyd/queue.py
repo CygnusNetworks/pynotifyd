@@ -218,6 +218,14 @@ class PersistentQueue:
 			self.processlock = None
 			raise pynotifyd.PyNotifyDError("failed to lock queuedir")
 
+	def getlockowner(self):
+		"""Return the pid of the process owning the queue lock.
+		@rtype: int or None
+		"""
+		if self.processlock:
+			return self.processlock.getowner()
+		return ProcessLock(os.path.join(self.queuedir, ".lock")).getowner()
+
 	def unlock(self):
 		"""Unlock the queuedir."""
 		if self.processlock:

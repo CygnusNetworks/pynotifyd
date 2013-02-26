@@ -1,8 +1,10 @@
 #!/usr/bin/python
 
+import os
 import pynotifyd
 import pynotifyd.queue
 from optparse import OptionParser
+import signal
 import sys
 
 def die(message):
@@ -47,6 +49,11 @@ def main():
 		queue.enqueue(recipient, message)
 	except pynotifyd.PyNotifyDError, err:
 		die_exc(err)
+
+	if config["general"]["notify"] == "signal":
+		pid = queue.getlockowner()
+		if pid is not None:
+			os.kill(pid, signal.SIGUSR1)
 
 if __name__ == "__main__":
 	main()
