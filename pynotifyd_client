@@ -53,7 +53,10 @@ def main():
 	if config["general"]["notify"] == "signal":
 		pid = queue.getlockowner()
 		if pid is not None:
-			os.kill(pid, signal.SIGUSR1)
+			try:
+				os.kill(pid, signal.SIGUSR1)
+			except OSError as err:
+				die("failed to notify daemon: %s" % err.strerror)
 
 if __name__ == "__main__":
 	main()
