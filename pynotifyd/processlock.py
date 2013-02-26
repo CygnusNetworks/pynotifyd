@@ -30,6 +30,20 @@ class ProcessLock:
 		self.mypid = os.getpid()
 		self.autorelease = autorelease
 
+	def getowner(self):
+		"""Return the pid of the process owning the lock.
+		@rtype: int or None
+		"""
+		try:
+			otherpid = os.readlink(self.filename)
+		except OSError: # EINVAL, ENOENT, ...
+			return None
+		# self.filename is a symbolic link pointing to otherpid
+		try:
+			return int(otherpid)
+		except ValueError:
+			return None
+
 	def tryacquire(self, handlestale=True):
 		"""
 		@type handlestale: bool
@@ -44,14 +58,8 @@ class ProcessLock:
 			if err.errno != errno.EEXIST or not handlestale:
 				return False
 		# self.filename exists
-		try:
-			otherpid = os.readlink(self.filename)
-		except OSError: # EINVAL, ENOENT, ...
-			return False
-		# self.filename is a symbolic link pointing to otherpid
-		try:
-			otherpid = int(otherpid)
-		except ValueError:
+		otherpid = self.getowner()
+		if otherpid is None:
 			return False
 		# otherpid is a number
 		try:
@@ -95,16 +103,8 @@ class ProcessLock:
 				tampered with (pid changed, etc.)
 		@rtype: bool
 		"""
-		if not force:
-			try:
-				thepid = os.readlink(self.filename)
-			except OSError:
-				return False
-			try:
-				if self.mypid != int(thepid):
-					return False
-			except ValueError:
-				return False
+		if (not force) and self.mypid != self.getowner():
+			return False
 		try:
 			os.unlink(self.filename)
 		except OSError:
