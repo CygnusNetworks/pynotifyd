@@ -204,7 +204,7 @@ class PersistentJabberClient(BaseJabberClient, threading.Thread):
 		self.stream.set_message_handler("normal", self.handle_message_normal)
 
 	def handle_contact_available(self, jid, state):
-		logger.debug("contact %s went online" % (astr(jid),))
+		logger.debug("contact %s went online with state %r" % (astr(jid), state))
 		inner = self.contacts.setdefault(jid.bare(), dict())
 		inner[jid] = (u"normal", state)
 
@@ -358,10 +358,13 @@ class PersistentJabberClient(BaseJabberClient, threading.Thread):
 			deliver = []
 			for jid, (settings, state) in inner.items():
 				if settings == u"disable":
+					logger.debug("Not sending message to %r. Disabled by user request." % (jid,))
 					continue
 				if exclude_resources(jid.resource):
+					logger.debug("Not sending message to %r. Resource is excluded." % (jid,))
 					continue
 				if not include_states(state):
+					logger.debug("Not sending to %r. State %r is not considered available." % (jid, state))
 					continue
 				if settings == u"ignore":
 					# Do not trigger temporary errors.
