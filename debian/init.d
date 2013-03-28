@@ -93,9 +93,11 @@ do_stop()
 	test -z "$pid" && return 1
 	ps "$pid" >/dev/null 2>&1 || return 1
 	kill -TERM "$pid" || return 2
-	sleep 1
-	ps "$pid" >/dev/null 2>&1 && return 2
-	return 0
+	for w in 0.5 0.5 1 1 2; do
+		sleep $w
+		ps "$pid" >/dev/null 2>&1 || return 0
+	done
+	return 2
 }
 
 case "$1" in
