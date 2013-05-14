@@ -324,6 +324,11 @@ class PersistentJabberClient(BaseJabberClient, threading.Thread):
 				else:
 					stream.idle()
 				stream = self.get_stream()
+		except Exception as exc:
+			logger.warning("jabber thread terminated with exception %r", exc)
+			raise
+		else:
+			logger.info("jabber thread terminated due to user request")
 		finally:
 			self.client_lock.release()
 
