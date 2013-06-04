@@ -1,3 +1,10 @@
+pynotifyd (0.8.6) stable; urgency=low
+
+  * persistentjabber is still dropping connections. Maybe the main loop dies?
+    Add logging.
+
+ -- Helmut Grohne <h.grohne@cygnusnetworks.de>  Tue, 04 Jun 2013 12:14:08 +0200
+
 pynotifyd (0.8.5) stable; urgency=low
 
   * Bump version to 0.8.5.
