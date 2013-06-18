@@ -311,21 +311,25 @@ class PersistentJabberClient(BaseJabberClient, threading.Thread):
 			stream = self.get_stream()
 			while stream:
 				self.client_lock.release()
+				logger.debug("jabber thread waiting for input")
 				try:
 					ifds, _, efds = select.select([stream.socket,
 						self.reconnect_trigger_read], [], [stream.socket], 60)
 				finally:
 					self.client_lock.acquire()
 				if self.reconnect_trigger_read in ifds:
+					logger.debug("jabber thread received reconnect trigger")
 					os.read(self.reconnect_trigger_read, 1) # consume trigger
 					self.do_reconnect()
 				elif stream.socket in ifds or stream.socket in efds:
+					logger.debug("jabber thread processing connection event")
 					try:
 						stream.process()
 					except pyxmpp.exceptions.FatalStreamError:
 						self.connection_is_usable = False
 						self.do_reconnect()
 				else:
+					logger.debug("jabber thread doing xmpp housekeeping")
 					stream.idle()
 				stream = self.get_stream()
 		except Exception as exc:
