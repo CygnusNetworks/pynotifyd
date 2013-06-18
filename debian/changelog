@@ -1,3 +1,9 @@
+pynotifyd (0.8.8) UNRELEASED; urgency=low
+
+  * TODO.
+
+ -- Helmut Grohne <h.grohne@cygnusnetworks.de>  Tue, 18 Jun 2013 14:21:35 +0200
+
 pynotifyd (0.8.7) stable; urgency=low
 
   * persistentjabber is still dropping connections.
