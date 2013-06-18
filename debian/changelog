@@ -1,3 +1,12 @@
+pynotifyd (0.8.7) stable; urgency=low
+
+  * persistentjabber is still dropping connections.
+    + Explicitly handling the disconnect event now.
+    + Maybe the jabber thread hangs in one of the pyxmpp functions? Add
+      logging.
+
+ -- Helmut Grohne <h.grohne@cygnusnetworks.de>  Tue, 18 Jun 2013 14:19:01 +0200
+
 pynotifyd (0.8.6) stable; urgency=low
 
   * persistentjabber is still dropping connections. Maybe the main loop dies?
