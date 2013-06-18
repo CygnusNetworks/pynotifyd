@@ -227,6 +227,10 @@ class PersistentJabberClient(BaseJabberClient, threading.Thread):
 		self.connection_is_usable = True
 		self.connection_usable.notify_all()
 
+	def disconnected(self):
+		logger.info("Jabber connection terminated.")
+		self.initiate_reconnect()
+
 	### Section: our own methods for controlling the JabberClient
 	def __del__(self):
 		os.close(self.reconnect_trigger_write)
