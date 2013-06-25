@@ -1,8 +1,12 @@
-pynotifyd (0.8.8) UNRELEASED; urgency=low
+pynotifyd (0.8.8) stable; urgency=low
 
-  * TODO.
+  * persistentjabber
+    + Replace logic for detect termination, because it triggers during normal
+      operation.
+    + Some other aspects are interesting for logging.
+  * debian/init.d: fix exit codes for status to comply with LSB
 
- -- Helmut Grohne <h.grohne@cygnusnetworks.de>  Tue, 18 Jun 2013 14:21:35 +0200
+ -- Helmut Grohne <h.grohne@cygnusnetworks.de>  Tue, 25 Jun 2013 15:56:59 +0200
 
 pynotifyd (0.8.7) stable; urgency=low
 
