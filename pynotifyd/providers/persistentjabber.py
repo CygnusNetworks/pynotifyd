@@ -278,22 +278,27 @@ class PersistentJabberClient(BaseJabberClient, threading.Thread):
 
 	def do_reconnect(self):
 		"""must not be called outside of run"""
+		logger.debug("Starting reconnect loop.")
 		assert not self.connection_is_usable
 		while True:
+			logger.debug("Clearing data structures before reconnect.")
 			self.contacts.clear()
 			self.last_ping = None
 			# disconnect would be clean, but could take forever.
 			if self.stream is not None:
+				logger.debug("A stream exists. Close.")
 				try:
 					self.stream.close()
-				except pyxmpp.exceptions.FatalStreamError:
-					pass
+				except pyxmpp.exceptions.FatalStreamError as exc:
+					logger.debug("Failed to close stream with %s. Proceed anyway.", exc)
 			logger.debug("Attempting to connect to jabber server.")
 			try:
 				self.connect()
-			except pyxmpp.exceptions.FatalStreamError:
+			except pyxmpp.exceptions.FatalStreamError as exc:
+				logger.info("Connect failed with %s", exc)
 				continue # try again
 			else:
+				logger.debug("Jabber connect completed successfully.")
 				return
 
 	def run(self):
