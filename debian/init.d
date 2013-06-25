@@ -53,10 +53,11 @@ do_status()
 {
 	local queuedir pid
 	queuedir=`get_queuedir`
-	test -z "$queuedir" && return 1
+	# test -d "" fails, so failure in get_queuedir is covered as well
+	test -d "$queuedir" || return 4 # cannot determine status
 	pid=`readlink "$queuedir/.lock"`
-	test -z "$pid" && return 1
-	ps "$pid" >/dev/null 2>&1 || return 1
+	test -z "$pid" && return 3 # lockfile absent -> program not running
+	ps "$pid" >/dev/null 2>&1 || return 2 # dead, but lockfile exists
 	return 0
 }
 
