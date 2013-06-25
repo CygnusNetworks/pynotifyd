@@ -3,7 +3,7 @@
 import distutils.core
 
 distutils.core.setup(name='pynotifyd',
-	version='0.8.8',
+	version='0.8.9',
 	description="Python Notification Daemon",
 	long_description="The daemon allows you to send a message to a contact via jabber, email or sms whatever fits best. It is intended for use with Nagios.",
 	author='Helmut Grohne',
