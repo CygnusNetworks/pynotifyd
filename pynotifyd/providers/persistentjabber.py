@@ -145,6 +145,8 @@ class PersistentJabberClient(BaseJabberClient, threading.Thread):
 	@ivar last_reconnect: unix timestamp when the last reconnect was attempted
 		This varible is only accessed by the main thread and never by the
 		jabber client thread.
+	@type terminate: bool
+	@ivar terminating: whether the client is about to shut down
 	"""
 	def __init__(self, jid, password, ping_max_age=0, ping_timeout=10, reconnect_timeout=60):
 		"""
@@ -163,6 +165,7 @@ class PersistentJabberClient(BaseJabberClient, threading.Thread):
 		self.connection_is_usable = False
 		self.contacts = dict()
 		self.last_ping = None
+		self.terminating = False
 
 	### Section: handler methods passed to pyxmpp
 	def handle_message_normal(self, stanza):
@@ -308,35 +311,46 @@ class PersistentJabberClient(BaseJabberClient, threading.Thread):
 		self.client_lock.acquire()
 		try:
 			self.connect()
-			stream = self.get_stream()
-			while stream:
-				self.client_lock.release()
-				logger.debug("jabber thread waiting for input")
-				try:
-					ifds, _, efds = select.select([stream.socket,
-						self.reconnect_trigger_read], [], [stream.socket], 60)
-				finally:
-					self.client_lock.acquire()
-				if self.reconnect_trigger_read in ifds:
-					logger.debug("jabber thread received reconnect trigger")
-					os.read(self.reconnect_trigger_read, 1) # consume trigger
-					self.do_reconnect()
-				elif stream.socket in ifds or stream.socket in efds:
-					logger.debug("jabber thread processing connection event")
-					try:
-						stream.process()
-					except pyxmpp.exceptions.FatalStreamError:
-						self.connection_is_usable = False
-						self.do_reconnect()
-				else:
-					logger.debug("jabber thread doing xmpp housekeeping")
-					stream.idle()
+			while True:
 				stream = self.get_stream()
+				if stream is not None:
+					self.client_lock.release()
+					logger.debug("jabber thread waiting for input")
+					try:
+						ifds, _, efds = select.select([stream.socket,
+							self.reconnect_trigger_read], [], [stream.socket], 60)
+					finally:
+						self.client_lock.acquire()
+					if self.terminating:
+						logger.debug("detected termination after select")
+						break
+					elif self.reconnect_trigger_read in ifds:
+						logger.debug("jabber thread received reconnect trigger")
+						os.read(self.reconnect_trigger_read, 1) # consume trigger
+						self.do_reconnect()
+					elif stream.socket in ifds or stream.socket in efds:
+						logger.debug("jabber thread processing connection event")
+						try:
+							stream.process()
+						except pyxmpp.exceptions.FatalStreamError:
+							self.connection_is_usable = False
+							self.do_reconnect()
+					else:
+						logger.debug("jabber thread doing xmpp housekeeping")
+						stream.idle()
+				elif self.terminating:
+					logger.debug("detected termination on dead stream")
+					break
+				else:
+					logger.info("no client stream found. reconnecting")
+					self.connection_is_usable = False
+					self.do_reconnect()
 		except Exception as exc:
 			logger.warning("jabber thread terminated with exception %r", exc)
 			raise
 		else:
 			logger.info("jabber thread terminated due to user request")
+			assert self.terminating
 		finally:
 			self.client_lock.release()
 
@@ -429,5 +443,6 @@ class ProviderPersistentJabber(pynotifyd.providers.ProviderBase):
 				exclude_resources.__contains__, include_states.__contains__)
 
 	def terminate(self):
+		self.client_thread.terminating = True
 		self.client_thread.disconnect()
 		self.client_thread.join()
