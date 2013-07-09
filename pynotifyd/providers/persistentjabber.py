@@ -351,7 +351,7 @@ class PersistentJabberClient(BaseJabberClient, threading.Thread):
 					self.connection_is_usable = False
 					self.do_reconnect()
 		except Exception as exc:
-			logger.warning("jabber thread terminated with exception %r", exc)
+			logger.warning("jabber thread terminated with exception %r", exc, exc_info=True)
 			raise
 		else:
 			logger.info("jabber thread terminated due to user request")
