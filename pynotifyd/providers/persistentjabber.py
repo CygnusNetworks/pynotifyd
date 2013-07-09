@@ -2,6 +2,7 @@ from __future__ import with_statement
 import logging
 import os
 import select
+import socket
 import threading
 import time
 
@@ -296,6 +297,9 @@ class PersistentJabberClient(BaseJabberClient, threading.Thread):
 				self.connect()
 			except pyxmpp.exceptions.FatalStreamError as exc:
 				logger.info("Connect failed with %s", exc)
+				continue # try again
+			except socket.error as exc:
+				logger.info("Connect failed with socket error %s", exc)
 				continue # try again
 			else:
 				logger.debug("Jabber connect completed successfully.")
