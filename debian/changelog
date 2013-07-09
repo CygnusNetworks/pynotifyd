@@ -1,3 +1,9 @@
+pynotifyd (0.8.10) UNRELEASED; urgency=low
+
+  * TODO.
+
+ -- Helmut Grohne <h.grohne@cygnusnetworks.de>  Tue, 09 Jul 2013 17:57:57 +0200
+
 pynotifyd (0.8.9) stable; urgency=low
 
   * persistentjabber:
