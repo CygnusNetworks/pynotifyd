@@ -1,6 +1,10 @@
-pynotifyd (0.8.9) UNRELEASED; urgency=low
+pynotifyd (0.8.9) stable; urgency=low
 
-  * TODO.
+  * persistentjabber:
+    + Log unknown exceptions with traceback.
+    + pyxmpp.jabber.client.JabberClient.connect raises socket.error. Instead
+      of terminating the client, handle it and reconnect.
+  * debian/init.d: use SIGKILL to bring down pynotifyd
 
  -- Helmut Grohne <h.grohne@cygnusnetworks.de>  Tue, 25 Jun 2013 16:00:38 +0200
 
