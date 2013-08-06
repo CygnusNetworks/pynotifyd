@@ -341,7 +341,12 @@ class PersistentJabberClient(BaseJabberClient, threading.Thread):
 						logger.debug("jabber thread processing connection event")
 						try:
 							stream.process()
-						except pyxmpp.exceptions.FatalStreamError:
+						except pyxmpp.exceptions.StreamAuthenticationError:
+							logger.error("failed to authenticate to jabber server. terminating", exc_info=True)
+							self.terminating = True
+							break
+						except pyxmpp.exceptions.FatalStreamError as err:
+							logger.warning("processing of xmpp stream failed with %r", err, exc_info=True)
 							self.connection_is_usable = False
 							self.do_reconnect()
 					else:
