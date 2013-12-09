@@ -1,3 +1,5 @@
 *.pyc
 *.pyo
 build
+.idea
+atlassian-ide-plugin.xml
