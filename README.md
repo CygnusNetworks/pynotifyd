@@ -6,7 +6,7 @@ Pynotifyd is providing a solution for sending Notifications to users
 by Instant Messaging (Jabber/XMPP) and depending on their Online Status to mobile phone numbers by short message, if the user is offline or the Online status (for example away) is not matching a defined criteria. Plugins exist for Jabber/XMPP and some SMS providers (Sipgate, T-Mobile Developergarden). Other handlers can be easily added by implementing a plugin or calling a shell command.
 
 ##Introduction
-pynotifyd comes as a library, a daemon and a client. It requires the following Python modules:
+pynotifyd comes as a library, a daemon and a client. It requires at least Python 2.5 and the following Python modules:
 
 * configobj
 
