@@ -1,4 +1,5 @@
-#!/usr/bin/python
+#!/usr/bin/env python
+# -*- coding: utf-8 -*-
 """This module provides a class ProcessLock that can create reliable
 and fault tolerant lock files.
 """

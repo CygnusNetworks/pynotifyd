@@ -1,3 +1,6 @@
+#!/usr/bin/env python
+# -*- coding: utf-8 -*-
+
 import pyxmpp.jabber.client
 import pyxmpp.message
 import pyxmpp.jid

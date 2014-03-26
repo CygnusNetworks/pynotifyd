@@ -1,3 +1,6 @@
+#!/usr/bin/env python
+# -*- coding: utf-8 -*-
+
 from pyxmpp.exceptions import JIDError
 from pyxmpp.jabber.client import JabberClient
 from pyxmpp.jid import JID

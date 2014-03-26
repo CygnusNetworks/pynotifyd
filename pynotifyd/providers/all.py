@@ -1,3 +1,6 @@
+#!/usr/bin/env python
+# -*- coding: utf-8 -*-
+
 from pynotifyd.providers.developergarden import ProviderDevelopergarden
 from pynotifyd.providers.sipgate import ProviderSipgate
 from pynotifyd.providers.shell import ProviderShell
