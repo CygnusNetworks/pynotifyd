@@ -1,6 +1,16 @@
 #!/usr/bin/env python
 # -*- coding: utf-8 -*-
 
+import grp
+import logging
+import logging.handlers
+import os
+import platform
+import pwd
+import signal
+import sys
+import traceback
+
 # The following snippet has to occur before anyone uses the logging module.
 try:
 	import pyinotify
@@ -14,14 +24,8 @@ else:
 import pynotifyd
 import pynotifyd.queue
 import pynotifyd.providers.all
-import logging
-import logging.handlers
 from optparse import OptionParser
-import sys
-import os
-import signal
-import grp
-import pwd
+
 try:
 	from setproctitle import setproctitle
 except ImportError:
@@ -108,8 +112,17 @@ def chuid(user):
 	if os.getuid() != user:
 		die("uid unchanged after setuid()")
 
+def get_log_address():
+	if platform.system() == "Linux":
+		log_address = "/dev/log"
+	elif platform.system() == "Darwin":
+		log_address = "/var/run/syslog"
+	else:
+		raise RuntimeError("platform.system() %s is not defined" % platform.system())
+	return log_address
+
 def syslog_handler(ident):
-	sysloghand = logging.handlers.SysLogHandler(address="/dev/log")
+	sysloghand = logging.handlers.SysLogHandler(address=get_log_address())
 	logformat = "%s[%%(process)s]: %%(message)s" % (ident,)
 	sysloghand.setFormatter(logging.Formatter(logformat))
 	return sysloghand
@@ -166,8 +179,11 @@ def main():
 		providers = {}
 		for name, section in config["providers"].items():
 			try:
-				providers[name] = pynotifyd.providers.all.provider_drivers \
-						[section["driver"]](section)
+				if section["driver"] in pynotifyd.providers.all.provider_drivers:
+					providers[name] = pynotifyd.providers.all.provider_drivers[section["driver"]](section)
+				else:
+					die("cannot use provider %s - check if dependencies are satisfied or remove provider from config. Error: %s" % (section["driver"], pynotifyd.providers.all.provider_errors[section["driver"]]))
+
 			except pynotifyd.PyNotifyDError, err:
 				err.args = err.args + ("in provider %s" % name,)
 				raise err
@@ -221,6 +237,7 @@ if __name__ == '__main__':
 	try:
 		main()
 	except Exception, exc:
-		logger.error("pynotifyd crashed with exception %s: %s" %
-				(exc.__class__.__name__, str(exc)))
+		logger.error("pynotifyd crashed with message %s and exception %s" % (str(exc), exc.__class__.__name__))
+		for line in traceback.format_exc(sys.exc_info()[2]).splitlines():
+			logger.error(line)
 		raise
