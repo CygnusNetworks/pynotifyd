@@ -1,8 +1,8 @@
-pynotifyd (0.8.10) UNRELEASED; urgency=low
+pynotifyd (0.90) UNRELEASED; urgency=low
 
   * TODO.
 
- -- Helmut Grohne <h.grohne@cygnusnetworks.de>  Tue, 09 Jul 2013 17:57:57 +0200
+ -- Torge Szczepanek <info@cygnusnetworks.de>  Wed, 26 Mar 2014 20:19:52 +0100
 
 pynotifyd (0.89) stable; urgency=low
 
