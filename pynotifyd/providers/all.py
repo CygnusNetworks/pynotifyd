@@ -30,8 +30,8 @@ try:
 	from pynotifyd.providers.mock import ProviderMock
 	__all__.append("ProviderMock")
 	provider_drivers["mock"] = ProviderMock
-except:
-	pass
+except Exception, msg:
+	provider_errors["mock"] = msg
 
 try:
 	from pynotifyd.providers.jabber import ProviderJabber

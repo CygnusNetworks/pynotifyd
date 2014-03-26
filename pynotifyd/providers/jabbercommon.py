@@ -85,9 +85,8 @@ def validate_recipient(recipient):
 		include_states = make_set(recipient["jabber_include_states"])
 	except KeyError:
 		include_states = set(["online", "chat"])
-	except ValueError:
-		raise pynotifyd.PyNotifyDConfigurationError(
-				"invalid value for jabber_include_states: %s" % str(err))
+	except ValueError, err:
+		raise pynotifyd.PyNotifyDConfigurationError("invalid value for jabber_include_states: %s" % str(err))
 	if not include_states:
 		raise pynotifyd.PyNotifyDConfigurationError(
 				"jabber_include_states is empty")
