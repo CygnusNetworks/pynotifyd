@@ -24,9 +24,35 @@ Then edit your configuration file. In the spirit of Nagios every contact needs t
 
 Messages can be enqueued all the time, once the daemon starts up it will start delivering them. The interface of pynotifyd_client is designed in a way it works well with Nagios, but could also be used for other purposes.
 
-##Examples
+##Example configfile
 
 See provided pynotifyd.conf for a example /etc/pynotifyd.conf.
 
+##Example Nagios command Configuration
+```
+define command{
+        command_name    notify-service-by-pynotify
+        command_line    /usr/bin/pynotifyd_client $CONTACTPAGER$ "Service: $SERVICEDESC$ Host: $HOSTNAME$ Address: $HOSTADDRESS$ State: $SERVICESTATE$ Info: $SERVICEOUTPUT$ Date: $LONGDATETIME$"
+        }
+
+define command{
+        command_name    notify-host-by-pynotify
+        command_line    /usr/bin/pynotifyd_client $CONTACTPAGER$ "Host $HOSTALIAS$ is $HOSTSTATE$ Info: $HOSTOUTPUT$ Time: $LONGDATETIME$"
+        }
+```
+##Example Nagios Contact Configuration
+```
+define contact{
+        contact_name                    username-pager
+        alias                           Full Username
+        service_notification_period     24x7
+        host_notification_period        24x7
+        service_notification_options    w,c,r
+        host_notification_options       d,r
+        service_notification_commands   notify-service-by-pynotify
+        host_notification_commands      notify-host-by-pynotify
+        pager                           username  # this is the named defined in contacts section of pynotifyd.conf 
+        }
+```
 
 
