@@ -4,7 +4,7 @@ pynotifyd (0.8.10) UNRELEASED; urgency=low
 
  -- Helmut Grohne <h.grohne@cygnusnetworks.de>  Tue, 09 Jul 2013 17:57:57 +0200
 
-pynotifyd (0.8.9) stable; urgency=low
+pynotifyd (0.89) stable; urgency=low
 
   * persistentjabber:
     + Log unknown exceptions with traceback.
@@ -14,7 +14,7 @@ pynotifyd (0.8.9) stable; urgency=low
 
  -- Helmut Grohne <h.grohne@cygnusnetworks.de>  Tue, 25 Jun 2013 16:00:38 +0200
 
-pynotifyd (0.8.8) stable; urgency=low
+pynotifyd (0.88) stable; urgency=low
 
   * persistentjabber
     + Replace logic for detect termination, because it triggers during normal
@@ -24,7 +24,7 @@ pynotifyd (0.8.8) stable; urgency=low
 
  -- Helmut Grohne <h.grohne@cygnusnetworks.de>  Tue, 25 Jun 2013 15:56:59 +0200
 
-pynotifyd (0.8.7) stable; urgency=low
+pynotifyd (0.87) stable; urgency=low
 
   * persistentjabber is still dropping connections.
     + Explicitly handling the disconnect event now.
@@ -33,14 +33,14 @@ pynotifyd (0.8.7) stable; urgency=low
 
  -- Helmut Grohne <h.grohne@cygnusnetworks.de>  Tue, 18 Jun 2013 14:19:01 +0200
 
-pynotifyd (0.8.6) stable; urgency=low
+pynotifyd (0.86) stable; urgency=low
 
   * persistentjabber is still dropping connections. Maybe the main loop dies?
     Add logging.
 
  -- Helmut Grohne <h.grohne@cygnusnetworks.de>  Tue, 04 Jun 2013 12:14:08 +0200
 
-pynotifyd (0.8.5) stable; urgency=low
+pynotifyd (0.85) stable; urgency=low
 
   * Bump version to 0.8.5.
   * jabber: Add "chat" to default includestates.
@@ -48,7 +48,7 @@ pynotifyd (0.8.5) stable; urgency=low
 
  -- Helmut Grohne <h.grohne@cygnusnetworks.de>  Tue, 09 Apr 2013 17:13:14 +0200
 
-pynotifyd (0.8.4) stable; urgency=low
+pynotifyd (0.84) stable; urgency=low
 
   * More logging in persistentjabber.
   * Improve documentation.
@@ -56,14 +56,14 @@ pynotifyd (0.8.4) stable; urgency=low
 
  -- Helmut Grohne <h.grohne@cygnusnetworks.de>  Tue, 29 Jan 2013 11:29:04 +0100
 
-pynotifyd (0.8.3) stable; urgency=low
+pynotifyd (0.83) stable; urgency=low
 
   * Attempt to fix
     AttributeError: 'NoneType' object has no attribute 'set_response_handlers'
 
  -- Helmut Grohne <h.grohne@cygnusnetworks.de>  Wed, 10 Oct 2012 16:44:46 +0200
 
-pynotifyd (0.8-2) stable; urgency=low
+pynotifyd (0.82) stable; urgency=low
 
   * Ship the configuration file as an example.
   * Skip startup if configuration file is missing.
@@ -72,7 +72,7 @@ pynotifyd (0.8-2) stable; urgency=low
 
  -- Helmut Grohne <h.grohne@cygnusnetworks.de>  Mon, 03 Sep 2012 15:32:49 +0200
 
-pynotifyd (0.8-1) stable; urgency=low
+pynotifyd (0.81) stable; urgency=low
 
   * Use python logging module for more flexible logging.
   * Refactor jabber providers.
@@ -83,20 +83,20 @@ pynotifyd (0.8-1) stable; urgency=low
 
  -- Helmut Grohne <h.grohne@cygnusnetworks.de>  Tue, 21 Aug 2012 14:16:53 +0200
 
-pynotifyd (0.7-1) stable; urgency=low
+pynotifyd (0.70) stable; urgency=low
 
   * Fix sipgate api.
 
  -- Helmut Grohne <h.grohne@cygnusnetworks.de>  Mon, 02 Apr 2012 17:44:50 +0200
 
-pynotifyd (0.6-1) stable; urgency=low
+pynotifyd (0.60) stable; urgency=low
 
   [ Helmut Grohne ]
   * Implemented persistentjabber provider
 
  -- Torge Szczepanek <info@cygnusnetworks.de>  Thu, 16 Feb 2012 11:52:03 +0100
 
-pynotifyd (0.5-4) stable; urgency=low
+pynotifyd (0.51) stable; urgency=low
 
   [ Helmut Grohne ]
   * Missing (empty) ${misc:Depends} added for debhelper.
@@ -108,7 +108,7 @@ pynotifyd (0.5-4) stable; urgency=low
 
  -- Torge Szczepanek <info@cygnusnetworks.de>  Fri, 13 Jan 2012 17:15:54 +0100
 
-pynotifyd (0.5-1) stable; urgency=low
+pynotifyd (0.50) stable; urgency=low
 
   * Prepared for release
   * Fixed setup.py license and version
@@ -116,7 +116,7 @@ pynotifyd (0.5-1) stable; urgency=low
 
  -- Torge Szczepanek <info@cygnusnetworks.de>  Tue, 01 Feb 2011 15:55:20 +0100
 
-pynotifyd (0.2-1) UNRELEASED; urgency=low
+pynotifyd (0.20) UNRELEASED; urgency=low
 
   * Library:
     + Developergarden: Protocol changed. Support json.
@@ -143,7 +143,7 @@ pynotifyd (0.2-1) UNRELEASED; urgency=low
 
  -- Helmut Grohne <h.grohne@cygnusnetworks.de>  Tue, 25 Jan 2011 16:07:43 +0100
 
-pynotifyd (0.1-1) unstable; urgency=low
+pynotifyd (0.10) unstable; urgency=low
 
   * Initial release.
 
