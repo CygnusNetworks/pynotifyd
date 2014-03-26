@@ -31,9 +31,9 @@ class SMSProviderBase(ProviderBase):
 
 	Note that sms are usually limited in length, so the message gets
 	truncated. The truncation length is specified by the implementer
-	and defaults to 140.
+	and defaults to 160.
 	"""
-	maxsmslength = 140
+	maxsmslength = 160
 
 	def __init__(self, config):
 		try:
@@ -42,8 +42,7 @@ class SMSProviderBase(ProviderBase):
 		except KeyError:
 			pass
 		except ValueError:
-			raise pynotifyd.PyNotifyDConfigurationError("maxsmslength config " +
-					"option  requires an integer parameter")
+			raise pynotifyd.PyNotifyDConfigurationError("maxsmslength config option  requires an integer parameter")
 
 	def sendsms(self, phone, message):
 		"""This virtual function is to be overridden by sms proivder
@@ -59,7 +58,6 @@ class SMSProviderBase(ProviderBase):
 		try:
 			phone = recipient["phone"]
 		except KeyError:
-			raise pynotifyd.PyNotifyDConfigurationError(
-					"missing phone on contact")
+			raise pynotifyd.PyNotifyDConfigurationError("missing phone on contact")
 		message = message[:self.maxsmslength]
 		self.sendsms(phone, message)
