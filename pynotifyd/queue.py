@@ -95,10 +95,9 @@ __all__.append("PersistentQueue")
 class PersistentQueue:
 	def __init__(self, queuedir, retrylogic):
 		if not os.path.isdir(queuedir):
-			raise pynotifyd.PyNotifyDError("queuedir does not exist or is " +
-					"not a directory")
+			raise pynotifyd.PyNotifyDError("queuedir %s does not exist or is not a directory" % queuedir)
 		if not os.access(queuedir, os.R_OK|os.W_OK|os.X_OK):
-			raise pynotifyd.PyNotifyDError("queuedir lacks required permission")
+			raise pynotifyd.PyNotifyDError("queuedir %s lacks required permission" % queuedir)
 		self.queuedir = queuedir
 		self.retrylogic = retrylogic
 		self.processlock = None
