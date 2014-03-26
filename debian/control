@@ -10,9 +10,8 @@ XS-Python-Version: >= 2.5
 Package: python-pynotifyd
 Architecture: all
 Depends: python (>= 2.5), python-configobj, ${python:Depends}, ${misc:Depends},
- python-pyinotify, python-pyxmpp, python-cjson | python-json | python (>= 2.6)
 XB-Python-Version: ${python:Versions}
-Recommends: python-setproctitle
+Recommends: python-setproctitle, python-pyinotify, python-pyxmpp, python-cjson | python-json | python (>= 2.6)
 Description: Python Notification Daemon
  The daemon allows you to send a message to a contact via jabber, email or sms
  whatever fits best. It is intended for use with Nagios.
