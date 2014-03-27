@@ -19,7 +19,7 @@ For T-Mobile Developergarden you will need:
 
 * a json module (cjson, Python >=2.6 json or json from json-py)
 
-For notifications of new queue files (inotify) you should consider installing inotify. Otherwise a signal handler is used.
+For notifications of new queue files (inotify) you should consider installing pyinotify. Otherwise a signal handler is used.
 
 Both the client and the daemon share a configuration file. It contains a queue directory which must be writable to the client and must not contain any other files. 
 The client enqueues a message by adding a file to the queue directory. The daemon notices the file (using inotify) and starts processing the message. It tries different providers and waits some time according to a retry logic defined in the configuration file.
