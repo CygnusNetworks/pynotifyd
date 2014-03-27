@@ -1,7 +1,7 @@
-Format-Specification: http://svn.debian.org/wsvn/dep/web/deps/dep5.mdwn?op=file&rev=135
+Format-Specification: http://www.debian.org/doc/packaging-manuals/copyright-format/1.0/
 Name: pynotifyd
 Maintainer: Torge Szczepanek <info@cygnusnetworks.de>
-Source: none yet
+Source: https://github.com/CygnusNetworks/pynotifyd
 
 Files: *
 Copyright: 2010, Cygnus Networks GmbH <info@cygnusnetworks.de>
