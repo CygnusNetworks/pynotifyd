@@ -13,22 +13,21 @@ __all__ = []
 
 logger = logging.getLogger("pynotifyd.queue")
 
+
 def generate_unique_id():
 	"""Generate a unique identifier.
 	@rtype: str
 	"""
 	# These ids do not collide if a pid rollover takes at least one second.
-	tokens = dict(
-		P=os.getpid(),
-		T=time.time(),
-		C=generate_unique_id.counter,
-		R=random.randrange(1 << 32))
+	tokens = dict(P=os.getpid(), T=time.time(), C=generate_unique_id.counter, R=random.randrange(1 << 32))
 	generate_unique_id.counter += 1
-	return "".join(map("%s%x".__mod__, tokens.items()))
+	return "".join(["%s%x" % (key, value) for key, value in tokens])
 generate_unique_id.counter = 0
 
 __all__.append("QueueEntry")
-class QueueEntry:
+
+
+class QueueEntry(object):
 	def __init__(self, filename_or_parts):
 		"""
 		@type filename_or_parts: str or list
@@ -56,10 +55,7 @@ class QueueEntry:
 		"""
 		assert isinstance(wait, int)
 		assert state is None or isinstance(state, int)
-		parts = [
-				"%x" % (max(time.time(), self.deadline) + wait),
-				self.parts[1] if state is None else "%x" % state
-				] + self.parts[2:]
+		parts = ["%x" % (max(time.time(), self.deadline) + wait), self.parts[1] if state is None else "%x" % state] + self.parts[2:]
 		return self.__class__(parts)
 
 	@property
@@ -92,11 +88,13 @@ class QueueEntry:
 		return "%s(%r)" % (self.__class__.__name__, self.filename)
 
 __all__.append("PersistentQueue")
-class PersistentQueue:
+
+
+class PersistentQueue(object):
 	def __init__(self, queuedir, retrylogic):
 		if not os.path.isdir(queuedir):
 			raise pynotifyd.PyNotifyDError("queuedir %s does not exist or is not a directory" % queuedir)
-		if not os.access(queuedir, os.R_OK|os.W_OK|os.X_OK):
+		if not os.access(queuedir, os.R_OK | os.W_OK | os.X_OK):
 			raise pynotifyd.PyNotifyDError("queuedir %s lacks required permission" % queuedir)
 		self.queuedir = queuedir
 		self.retrylogic = retrylogic
@@ -124,9 +122,7 @@ class PersistentQueue:
 		"""
 		state = self.get_state(entry)
 		while isinstance(state, int):
-			entry = entry.modify(
-					wait=0 if fast else state,
-					state=entry.state + 1)
+			entry = entry.modify(wait=0 if fast else state, state=entry.state + 1)
 			state = self.get_state(entry)
 		return entry
 
@@ -143,8 +139,7 @@ class PersistentQueue:
 				tmpfile.write("%s\n%s" % (recipient, message))
 			os.rename(tmpname, self.get_path(entry))
 		except OSError, err:
-			raise pynotifyd.PyNotifyDError("failed to create queue file: %s" %
-					str(err))
+			raise pynotifyd.PyNotifyDError("failed to create queue file: %s" % str(err))
 		return entry
 
 	def iter_entries(self):
@@ -163,7 +158,7 @@ class PersistentQueue:
 		"""
 		try:
 			return min(self.iter_entries(), key=lambda entry: entry.deadline)
-		except ValueError: # empty sequence
+		except ValueError:  # empty sequence
 			return None
 
 	def get_state(self, entry):
@@ -189,7 +184,7 @@ class PersistentQueue:
 		@returns: (recipient, message)
 		"""
 		with file(self.get_path(entry)) as queuefile:
-			return (queuefile.readline().strip(), queuefile.read())
+			return queuefile.readline().strip(), queuefile.read()
 
 	def entry_done(self, entry):
 		"""
@@ -241,6 +236,8 @@ class PersistentQueue:
 
 
 __all__.append("process_queue_step")
+
+
 def process_queue_step(config, queue, providers):
 	"""
 	@type config: configobj.ConfigObj
@@ -264,25 +261,19 @@ def process_queue_step(config, queue, providers):
 	contactname, message = queue.get_contents(entry)
 	recipient = dict(name=contactname)
 	recipient.update(config["contacts"][contactname])
-	logger.debug("delivering entry %s to %s using %s" %
-			(str(entry), contactname, providername))
+	logger.debug("delivering entry %s to %s using %s" % (str(entry), contactname, providername))
 	try:
 		providers[providername].sendmessage(recipient, message)
 	except pynotifyd.PyNotifyDPermanentError, err:
-		logger.debug("delivery of %s to %s using %s failed with permanent error: %s" %
-				(str(entry), contactname, providername, str(err)))
+		logger.error("delivery of %s to %s using %s failed with permanent error: %s" % (str(entry), contactname, providername, str(err)))
 		queue.entry_next(entry, fast=True)
 	except pynotifyd.PyNotifyDTemporaryError, err:
-		logger.debug("delivery of %s to %s using %s failed with temporary error: %s" %
-				(str(entry), contactname, providername, str(err)))
+		logger.warn("delivery of %s to %s using %s failed with temporary error: %s" % (str(entry), contactname, providername, str(err)))
 		queue.entry_next(entry)
 	except Exception, exc:
-		logger.debug(("delivery of %s to %s using %s failed with an UNKNOWN " +
-				"EXCEPTION: %s  %s") % (str(entry), contactname, providername,
-					exc.__class__.__name__, str(exc)))
+		logger.error("delivery of %s to %s using %s failed with an unknown exception: %s  %s" % (str(entry), contactname, providername, exc.__class__.__name__, str(exc)))
 		queue.entry_next(entry)
 	else:
-		logger.debug("delivery of %s to %s using %s succeeded" %
-				(str(entry), contactname, providername))
+		logger.debug("delivery of %s to %s using %s succeeded" % (str(entry), contactname, providername))
 		queue.entry_done(entry)
 	return 0

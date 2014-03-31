@@ -6,9 +6,9 @@ import urllib
 import pynotifyd
 import pynotifyd.providers
 
-__all__ = []
+__all__ = ["ProviderSipgate"]
 
-__all__.append("ProviderSipgate")
+
 class ProviderSipgate(pynotifyd.providers.SMSProviderBase):
 	"""Send a sms using http://www.sipgate.de/ via xmlrpc.
 
@@ -38,12 +38,9 @@ class ProviderSipgate(pynotifyd.providers.SMSProviderBase):
 			raise pynotifyd.PyNotifyDConfigurationError("invalid value for api")
 		baseurl = self.teamurl if api == "team" else self.basicurl
 		try:
-			url = baseurl % dict(
-					username=urllib.quote(config["username"], ""),
-					password=urllib.quote(config["password"], ""))
+			url = baseurl % dict(username=urllib.quote(config["username"], ""), password=urllib.quote(config["password"], ""))
 		except KeyError:
-			raise pynotifyd.PyNotifyDConfigurationError(
-					"username and password required")
+			raise pynotifyd.PyNotifyDConfigurationError("username and password required")
 		self.rpc = xmlrpclib.Server(url)
 
 	def client_identify(self):
@@ -51,19 +48,12 @@ class ProviderSipgate(pynotifyd.providers.SMSProviderBase):
 		@raises PyNotifyDTemporaryError:
 		"""
 		try:
-			result = self.rpc.samurai.ClientIdentify(dict(
-					ClientName=self.identify_client_name
-					# ClientVersion=???
-					# ClientVendor=???
-					))
+			result = self.rpc.samurai.ClientIdentify(dict(ClientName=self.identify_client_name))
 		except xmlrpclib.Error, exc:
-			raise pynotifyd.PyNotifyDTemporaryError("xmlrpclib error during " +
-					"sipgate identify: %s" % str(exc))
+			raise pynotifyd.PyNotifyDTemporaryError("xmlrpclib error during sipgate identify: %s" % str(exc))
 		else:
 			if result.get("StatusCode") != 200:
-				raise pynotifyd.PyNotifyDTemporaryError(
-						"Sending SMS via sipgate failed with status %s" %
-						repr(result.get("StatusCode")))
+				raise pynotifyd.PyNotifyDTemporaryError("Sending SMS via sipgate failed with status %s" % repr(result.get("StatusCode")))
 
 	def initiate_send(self, phone, message):
 		"""
@@ -74,19 +64,12 @@ class ProviderSipgate(pynotifyd.providers.SMSProviderBase):
 		@raises PyNotifyDTemporaryError:
 		"""
 		try:
-			result = self.rpc.samurai.SessionInitiate(dict(
-					RemoteUri="sip:%s@sipgate.net" % phone,
-					TOS="text",
-					Content=message))
+			result = self.rpc.samurai.SessionInitiate(dict(RemoteUri="sip:%s@sipgate.net" % phone, TOS="text", Content=message))
 		except xmlrpclib.Error, exc:
-			raise pynotifyd.PyNotifyDTemporaryError(
-					"xmlrpclib error during sipgate send: %s" %
-					str(exc))
+			raise pynotifyd.PyNotifyDTemporaryError("xmlrpclib error during sipgate send: %s" % str(exc))
 		else:
 			if result.get("StatusCode") != 200:
-				raise pynotifyd.PyNotifyDTemporaryError(
-						"Sending SMS via sipgate failed with status %s" %
-						repr(result.get("StatusCode")))
+				raise pynotifyd.PyNotifyDTemporaryError("Sending SMS via sipgate failed with status %s" % repr(result.get("StatusCode")))
 
 	def get_balance(self):
 		"""
@@ -95,19 +78,14 @@ class ProviderSipgate(pynotifyd.providers.SMSProviderBase):
 		try:
 			result = self.rpc.samurai.BalanceGet()
 		except xmlrpclib.Error, exc:
-			raise pynotifyd.PyNotifyDTemporaryError(
-					"xmlrpclib error during sipgate getbalance: %s" %
-					str(exc))
+			raise pynotifyd.PyNotifyDTemporaryError("xmlrpclib error during sipgate getbalance: %s" % str(exc))
 		else:
 			if result.get("StatusCode") != 200:
-				raise pynotifyd.PyNotifyDTemporaryError(
-						"Getting balance via sipgate failed with status %s" %
-						repr(result.get("StatusCode")))
+				raise pynotifyd.PyNotifyDTemporaryError("Getting balance via sipgate failed with status %s" % repr(result.get("StatusCode")))
 			try:
 				return result["CurrentBalance"]
 			except KeyError:
-				raise pynotifyd.PyNotifyDTemporaryError(
-						"Answer to BalanceGet is lacking balance")
+				raise pynotifyd.PyNotifyDTemporaryError("Answer to BalanceGet is lacking balance")
 
 	def sendsms(self, phone, message):
 		assert phone.startswith('+')

@@ -12,9 +12,9 @@ from pynotifyd.providers.jabbercommon import BaseJabberClient, validate_recipien
 
 __all__ = []
 
-class SendJabberClient(BaseJabberClient):
-	def __init__(self, jid, password, target, message, exclude_resources,
-			include_states):
+
+class SendJabberClient(BaseJabberClient, object):
+	def __init__(self, jid, password, target, message, exclude_resources, include_states):
 		"""
 		@type jid: pyxmpp.jid.JID
 		@type password: str
@@ -28,8 +28,7 @@ class SendJabberClient(BaseJabberClient):
 		self.message = pyxmpp.message.Message(to_jid=self.target, body=message)
 		self.exclude_resources = exclude_resources
 		self.include_states = include_states
-		self.failure = pynotifyd.PyNotifyDTemporaryError(
-				"contact not available")
+		self.failure = pynotifyd.PyNotifyDTemporaryError("contact not available")
 		self.isdisconnected = False
 
 	### Section: BaseJabberClient API methods
@@ -52,8 +51,7 @@ class SendJabberClient(BaseJabberClient):
 		try:
 			self.roster.get_item_by_jid(self.target)
 		except KeyError:
-			self.failure = pynotifyd.PyNotifyDPermanentError(
-					"contact is not my roster")
+			self.failure = pynotifyd.PyNotifyDPermanentError("contact is not my roster")
 			# not on roster
 			self.disconnect_once()
 
@@ -77,7 +75,7 @@ class SendJabberClient(BaseJabberClient):
 			now = time.time()
 
 __all__.append("ProviderJabber")
-class ProviderJabber(pynotifyd.providers.ProviderBase):
+class ProviderJabber(pynotifyd.providers.ProviderBase, object):
 	"""Send a jabber message.
 
 	Required configuration options:

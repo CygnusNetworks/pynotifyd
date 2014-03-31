@@ -11,7 +11,9 @@ import errno
 import time
 
 __all__.append("ProcessLock")
-class ProcessLock:
+
+
+class ProcessLock(object):
 	"""This is a locking mechanism for processes. It uses the fact that
 	creation of symbolic links is atomic. To acquire a lock the current
 	process id is symlinked to a fixed filename. This is probably a
@@ -37,7 +39,7 @@ class ProcessLock:
 		"""
 		try:
 			otherpid = os.readlink(self.filename)
-		except OSError: # EINVAL, ENOENT, ...
+		except OSError:  # EINVAL, ENOENT, ...
 			return None
 		# self.filename is a symbolic link pointing to otherpid
 		try:
@@ -55,7 +57,7 @@ class ProcessLock:
 		try:
 			os.symlink("%d" % self.mypid, self.filename)
 			return True
-		except OSError, err: # ENOENT, EEXIST, ...
+		except OSError, err:  # ENOENT, EEXIST, ...
 			if err.errno != errno.EEXIST or not handlestale:
 				return False
 		# self.filename exists
@@ -66,7 +68,7 @@ class ProcessLock:
 		try:
 			os.kill(otherpid, 0)
 			return False
-		except OSError, err: # ESRCH, EPERM, ...
+		except OSError, err:  # ESRCH, EPERM, ...
 			if err.errno != errno.ESRCH:
 				return False
 		# otherpid is a non-existant pid => stale lock

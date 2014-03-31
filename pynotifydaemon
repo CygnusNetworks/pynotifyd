@@ -35,15 +35,19 @@ except ImportError:
 
 logger = logging.getLogger("pynotifyd.daemon")
 
+
 def logstderr(message):
 	sys.stderr.write(message + "\n")
+
 
 def die(message):
 	logstderr(message)
 	sys.exit(1)
 
+
 def die_exc(exception):
 	die("error: %s" % str(exception))
+
 
 def partial_apply(function, *boundargs, **boundkwargs):
 	def wrapped_function(*args, **kwargs):
@@ -53,6 +57,7 @@ def partial_apply(function, *boundargs, **boundkwargs):
 		return function(*newargs, **newkwargs)
 	wrapped_function.__doc__ = function.__doc__
 	return wrapped_function
+
 
 def daemonize():
 	rend, wend = os.pipe()
@@ -72,16 +77,17 @@ def daemonize():
 				sys.exit(1)
 			sys.exit(0)
 	except OSError, e:
-		die("first fork failed")
+		die("first fork failed with error %e" % e)
 	os.setsid()
 	try:
 		if os.fork() > 0:
 			sys.exit(0)
 	except OSError, e:
-		die("second fork failed")
+		die("second fork failed with error %e" % e)
 	rend.close()
 	os.dup2(devnull, 2)
 	return wend
+
 
 def chgid(group):
 	if group.isdigit():
@@ -98,6 +104,7 @@ def chgid(group):
 	if os.getgid() != group:
 		die("gid unchanged after setgid()")
 
+
 def chuid(user):
 	if user.isdigit():
 		user = int(user)
@@ -113,6 +120,7 @@ def chuid(user):
 	if os.getuid() != user:
 		die("uid unchanged after setuid()")
 
+
 def get_log_address():
 	if platform.system() == "Linux":
 		log_address = "/dev/log"
@@ -122,24 +130,28 @@ def get_log_address():
 		raise RuntimeError("platform.system() %s is not defined" % platform.system())
 	return log_address
 
+
 def syslog_handler(ident):
 	sysloghand = logging.handlers.SysLogHandler(address=get_log_address())
 	logformat = "%s[%%(process)s]: %%(message)s" % (ident,)
 	sysloghand.setFormatter(logging.Formatter(logformat))
 	return sysloghand
 
+
 def main():
+	config = dw = queue = None
+
 	def_config = "/etc/pynotifyd.conf"
 	parser = optparse.OptionParser(usage="Usage: %prog [options]")
 	parser.add_option("-c", "--config", dest="configfile", default=def_config,
-			help="use FILE as configuration file", metavar="FILE")
+					  help="use FILE as configuration file", metavar="FILE")
 	parser.add_option("-f", "--foreground", dest="foreground", default=False,
-			help="do not fork into background", action="store_true")
+					  help="do not fork into background", action="store_true")
 	parser.add_option("--clearqueue", dest="clearqueue", default=False,
-			help="clear the queue prior to starting up", action="store_true")
+					  help="clear the queue prior to starting up", action="store_true")
 	parser.add_option("--debuglibs", default=False, dest="debuglibs",
-			help="include very verbose log message from all libraries employed",
-			action="store_true")
+					  help="include very verbose log message from all libraries employed",
+					  action="store_true")
 	options, args = parser.parse_args()
 
 	mainlogger = logging.getLogger(None if options.debuglibs else "pynotifyd")
@@ -174,8 +186,7 @@ def main():
 		sys.stderr = daemonize()
 
 	try:
-		queue = pynotifyd.queue.PersistentQueue(config["general"]["queuedir"],
-				config["general"]["retry"])
+		queue = pynotifyd.queue.PersistentQueue(config["general"]["queuedir"], config["general"]["retry"])
 
 		providers = {}
 		for name, section in config["providers"].items():
@@ -186,7 +197,7 @@ def main():
 					die("cannot use provider %s - check if dependencies are satisfied or remove provider from config. Error: %s" % (section["driver"], pynotifyd.providers.all.provider_errors[section["driver"]]))
 
 			except pynotifyd.PyNotifyDError, err:
-				err.args = err.args + ("in provider %s" % name,)
+				err.msg = err.msg + ("in provider %s" % name,)
 				raise err
 	except pynotifyd.PyNotifyDError, err:
 		die_exc(err)
@@ -210,8 +221,10 @@ def main():
 
 	try:
 		running = [True]
+
 		def terminate(signum, frame):
 			running[0] = False
+
 		signal.signal(signal.SIGTERM, terminate)
 		while running[0]:
 			logger.debug("processing next event")
@@ -229,9 +242,8 @@ def main():
 			logger.debug("terminating provider %s" % name)
 			try:
 				provider.terminate()
-			except Exception, exc:
-				logger.error("failed to terminate provider %s with %s: %s" %
-						(name, exc.__class__.__name__, str(exc)))
+			except Exception, msg:
+				logger.error("failed to terminate provider %s with %s: %s" % (name, msg.__class__.__name__, msg))
 		queue.unlock()
 
 if __name__ == '__main__':

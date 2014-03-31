@@ -5,9 +5,9 @@ import subprocess
 import pynotifyd
 import pynotifyd.providers
 
-__all__ = []
+__all__ = ["ProviderShell"]
 
-__all__.append("ProviderShell")
+
 class ProviderShell(pynotifyd.providers.ProviderBase):
 	"""Send a message using a shell command.
 
@@ -26,23 +26,20 @@ class ProviderShell(pynotifyd.providers.ProviderBase):
 		try:
 			command = config["command"]
 		except KeyError:
-			raise pynotifyd.PyNotifyDConfigurationError(
-				"shell driver requires a command")
+			raise pynotifyd.PyNotifyDConfigurationError("shell driver requires a command")
 		if not isinstance(command, str):
-			raise pynotifyd.PyNotifyDConfigurationError(
-					"command option is not a string")
+			raise pynotifyd.PyNotifyDConfigurationError("command option is not a string")
 		self.command = command.split()
 		message_on_stdin = config.get("message_on_stdin", "no").strip().lower()
-		self.message_on_stdin =  message_on_stdin not in ('no', 'false', '0')
+		self.message_on_stdin = message_on_stdin not in ('no', 'false', '0')
 
 	def sendmessage(self, contact, message):
 		"""
-		@type contact: str
+		@type contact: dict
 		@type message: str
 		@raises PyNotifyDError:
 		"""
-		interpolate = dict(("contact:%s" % key, value)
-				for key, value in contact.items())
+		interpolate = dict(("contact:%s" % key, value) for key, value in contact.items())
 		interpolate["message"] = message
 		command = [part % interpolate for part in self.command]
 		try:
@@ -53,11 +50,6 @@ class ProviderShell(pynotifyd.providers.ProviderBase):
 				proc = subprocess.Popen(command)
 			retcode = proc.wait()
 			if retcode != 0:
-				raise pynotifyd.PyNotifyDTemporaryError(
-						"received nonzero exit code from yaps: %d" %
-						retcode)
+				raise pynotifyd.PyNotifyDTemporaryError("received nonzero exit code from shell: %d" % retcode)
 		except OSError, exc:
-			raise pynotifyd.PyNotifyDPermanentError(
-					"received OSError while calling yaps: %s" %
-					str(exc))
-
+			raise pynotifyd.PyNotifyDPermanentError("received OSError while calling shell: %s" % str(exc))

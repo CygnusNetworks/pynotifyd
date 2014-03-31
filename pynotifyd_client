@@ -8,27 +8,28 @@ from optparse import OptionParser
 import signal
 import sys
 
+
 def die(message):
 	sys.stderr.write(message + "\n")
 	sys.exit(1)
 
+
 def die_exc(exception):
 	die("error: %s" % str(exception))
 
+
 def main():
+	config = queue = None
 	def_config = "/etc/pynotifyd.conf"
 	parser = OptionParser(usage="Usage: %prog [options] <recipent> [message]")
-	parser.add_option("-c", "--config", dest="configfile", default=def_config,
-			help="use FILE as configuration file", metavar="FILE")
-	parser.add_option("-i", "--stdin", dest="stdin", default=False,
-			action="store_true", help="read message from stdin")
+	parser.add_option("-c", "--config", dest="configfile", default=def_config, help="use FILE as configuration file", metavar="FILE")
+	parser.add_option("-i", "--stdin", dest="stdin", default=False, action="store_true", help="read message from stdin")
 	options, args = parser.parse_args()
 
 	try:
 		config = pynotifyd.read_config(options.configfile)
 
-		queue = pynotifyd.queue.PersistentQueue(config["general"]["queuedir"],
-				config["general"]["retry"])
+		queue = pynotifyd.queue.PersistentQueue(config["general"]["queuedir"], config["general"]["retry"])
 	except pynotifyd.PyNotifyDError, err:
 		die_exc(err)
 

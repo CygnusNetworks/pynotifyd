@@ -7,7 +7,8 @@ from pyxmpp.jid import JID
 from pyxmpp.presence import Presence
 import pynotifyd
 
-class BaseJabberClient(JabberClient):
+
+class BaseJabberClient(JabberClient, object):
 	def __init__(self, jid, password):
 		JabberClient.__init__(self, jid, password)
 
@@ -46,14 +47,16 @@ class BaseJabberClient(JabberClient):
 		self.request_roster()
 		self.stream.send(Presence())
 
+
 def make_set(value):
 	if isinstance(value, list):
-		pass # ok
+		pass  # ok
 	elif isinstance(value, str):
 		value = map(str.strip, value.split(","))
 	else:
 		raise ValueError("invalid value type")
 	return set(value)
+
 
 def validate_recipient(recipient):
 	"""Extracts and parses the keys "jabber", "jabber_exclude_resources"
@@ -67,27 +70,23 @@ def validate_recipient(recipient):
 	try:
 		jid = recipient["jabber"]
 	except KeyError:
-		raise pynotifyd.PyNotifyDConfigurationError(
-				"missing jabber on contact")
+		raise pynotifyd.PyNotifyDConfigurationError("missing jabber on contact")
 	try:
 		jid = JID(jid)
 	except JIDError, err:
-		raise pynotifyd.PyNotifyDConfigurationError(
-				"failed to parse jabber id: %s" % str(err))
+		raise pynotifyd.PyNotifyDConfigurationError("failed to parse jabber id: %s" % str(err))
 	try:
 		exclude_resources = make_set(recipient["jabber_exclude_resources"])
 	except KeyError:
 		exclude_resources = set()
 	except ValueError, err:
-		raise pynotifyd.PyNotifyDConfigurationError(
-				"invalid value for jabber_exclude_resources: %s" % str(err))
+		raise pynotifyd.PyNotifyDConfigurationError("invalid value for jabber_exclude_resources: %s" % str(err))
 	try:
 		include_states = make_set(recipient["jabber_include_states"])
 	except KeyError:
-		include_states = set(["online", "chat"])
+		include_states = {"online", "chat"}
 	except ValueError, err:
 		raise pynotifyd.PyNotifyDConfigurationError("invalid value for jabber_include_states: %s" % str(err))
 	if not include_states:
-		raise pynotifyd.PyNotifyDConfigurationError(
-				"jabber_include_states is empty")
+		raise pynotifyd.PyNotifyDConfigurationError("jabber_include_states is empty")
 	return jid, exclude_resources, include_states

@@ -6,9 +6,9 @@ import random
 import pynotifyd
 import pynotifyd.providers
 
-__all__ = []
+__all__ = ["ProviderMock"]
 
-__all__.append("ProviderMock")
+
 class ProviderMock(pynotifyd.providers.ProviderBase):
 	"""Do nothing and fail configurably.
 
@@ -25,10 +25,8 @@ class ProviderMock(pynotifyd.providers.ProviderBase):
 	def __init__(self, config):
 		self.duration = int(config.get("duration", 3))
 		self.failtype = config.get("failtype")
-		if self.failtype not in (None, "permanent", "temporary", "random",
-				"success"):
-			raise pynotifyd.PyNotifyDConfigurationError("failtype must be one" +
-					"out of: permanent, temporary, random or success")
+		if self.failtype not in (None, "permanent", "temporary", "random", "success"):
+			raise pynotifyd.PyNotifyDConfigurationError("failtype must be one out of: permanent, temporary, random or success")
 
 	def sendmessage(self, recipient, message):
 		if self.failtype == "permanent":
@@ -39,4 +37,3 @@ class ProviderMock(pynotifyd.providers.ProviderBase):
 		elif self.failtype == "random":
 			if random.randrange(2) == 0:
 				raise pynotifyd.PyNotifyDTemporaryError("mocking random error")
-

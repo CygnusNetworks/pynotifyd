@@ -3,10 +3,10 @@
 
 import pynotifyd
 
-__all__ = []
+__all__ = ["ProviderBase"]
 
-__all__.append("ProviderBase")
-class ProviderBase:
+
+class ProviderBase(object):
 	def sendmessage(self, recipient, message):
 		"""This virtual function is to be overridden by provider
 		implementations.
@@ -21,6 +21,7 @@ class ProviderBase:
 		"""This virtual function is called during shutdown and can be
 		overridden by provider instances to free up resources."""
 		pass
+
 
 class SMSProviderBase(ProviderBase):
 	"""Somehow send the message as sms.

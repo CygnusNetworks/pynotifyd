@@ -24,26 +24,29 @@ __all__ = []
 
 logger = logging.getLogger("pynotifyd.providers.persistentjabber")
 
+
 def astr(obj):
 	"""Convert the given object to unicode and then to ascii replacing
 	non-printable characters."""
 	return unicode(obj).encode("ascii", "replace")
 
-class XMPPC2SPing(pyxmpp.iq.Iq):
+
+class XMPPC2SPing(pyxmpp.iq.Iq, object):
 	"""Creates ping message from the passed jid to its server."""
 	def __init__(self, myjid):
 		"""
 		@type myjid: pyxmpp.jid.JID
 		"""
-		pyxmpp.iq.Iq.__init__(self, from_jid=myjid,
-				to_jid=pyxmpp.jid.JID(myjid.domain), stanza_type="get")
+		pyxmpp.iq.Iq.__init__(self, from_jid=myjid, to_jid=pyxmpp.jid.JID(myjid.domain), stanza_type="get")
 		self.new_query("urn:xmpp:ping", "ping")
+
 
 class FutureTimedOut(Exception):
 	"""Raised when you wait for a future for a limited amount of time and no
 	result is available after that timeout. """
 
-class Future:
+
+class Future(object):
 	"""A value which is not yet available."""
 	def __init__(self):
 		self.value = None
@@ -74,7 +77,8 @@ class Future:
 				raise FutureTimedOut()
 		return self.value
 
-class SendPing:
+
+class SendPing(object):
 	"""Construct and send a XMPPC2SPing and set up response handlers."""
 	def __init__(self, client, timeout=60):
 		"""
@@ -84,8 +88,7 @@ class SendPing:
 		"""
 		self.ping = XMPPC2SPing(client.jid)
 		self.pingresult = Future()
-		client.stream.set_response_handlers(self.ping, self.success_handler,
-				self.failure_handler, self.timeout_handler, timeout)
+		client.stream.set_response_handlers(self.ping, self.success_handler, self.failure_handler, self.timeout_handler, timeout)
 		client.stream.send(self.ping)
 		self.sent = time.time()
 
@@ -116,6 +119,7 @@ class SendPing:
 		@returns: seconds
 		"""
 		return time.time() - self.sent
+
 
 class PersistentJabberClient(BaseJabberClient, threading.Thread):
 	"""Maintains a persistent jabber connection, presence states of contacts
@@ -149,7 +153,7 @@ class PersistentJabberClient(BaseJabberClient, threading.Thread):
 	@ivar last_reconnect: unix timestamp when the last reconnect was attempted
 		This varible is only accessed by the main thread and never by the
 		jabber client thread.
-	@type terminate: bool
+	@type terminating: bool
 	@ivar terminating: whether the client is about to shut down
 	"""
 	def __init__(self, jid, password, ping_max_age=0, ping_timeout=10, reconnect_timeout=60):
@@ -176,9 +180,9 @@ class PersistentJabberClient(BaseJabberClient, threading.Thread):
 		"""Messsage handler function for pyxmpp."""
 		jid = stanza.get_from()
 		try:
-			self.contacts[jid.bare()][jid] # raises KeyError
+			self.contacts[jid.bare()][jid]  # raises KeyError
 		except KeyError:
-			return # only accept messages from known clients
+			return  # only accept messages from known clients
 		body = stanza.get_body()
 		if body == u"help":
 			helpmessage = u"""Valid commands:
@@ -192,18 +196,14 @@ class PersistentJabberClient(BaseJabberClient, threading.Thread):
 		if body not in (u"normal", u"ignore", u"disable"):
 			return
 		try:
-			inner = self.contacts[jid.bare()] # raises KeyError
-			if inner[jid][0] == body: # raises KeyError
+			inner = self.contacts[jid.bare()]  # raises KeyError
+			if inner[jid][0] == body:  # raises KeyError
 				raise KeyError("no change needed")
 			inner[jid] = (body, inner[jid][1])
 		except KeyError:
 			pass
 		else:
-			statusmap = {
-				u"normal": None,
-				u"ignore": u"away",
-				u"disable": u"dnd"
-			}
+			statusmap = {u"normal": None, u"ignore": u"away", u"disable": u"dnd"}
 			self.stream.send(Presence(to_jid=jid, show=statusmap[body]))
 
 	### Section: BaseJabberClient API methods
@@ -218,13 +218,12 @@ class PersistentJabberClient(BaseJabberClient, threading.Thread):
 	def handle_contact_unavailable(self, jid):
 		logger.debug("contact %s went offline" % (astr(jid),))
 		try:
-			inner = self.contacts[jid.bare()] # raises KeyError
-			del inner[jid] # raises KeyError
+			inner = self.contacts[jid.bare()]  # raises KeyError
+			del inner[jid]  # raises KeyError
 			if not inner:
 				del self.contacts[jid.bare()]
 		except KeyError:
-			logger.info("could not find jid %s in my online list" %
-					(astr(jid),))
+			logger.info("could not find jid %s in my online list" % (astr(jid),))
 
 	### Section: pyxmpp JabberClient API methods
 	def roster_updated(self, item=None):
@@ -245,11 +244,6 @@ class PersistentJabberClient(BaseJabberClient, threading.Thread):
 
 	def check_availability(self):
 		"""Determine availability of the server.
-		@type maxage: float
-		@param maxage: use previous result if its age is lower than maxage
-				seconds
-		@type maxwait: float
-		@param maxwait: block up to this number of seconds to send a ping
 		@rtype: bool
 		"""
 		if not self.connection_is_usable:
@@ -257,8 +251,7 @@ class PersistentJabberClient(BaseJabberClient, threading.Thread):
 		with self.client_lock:
 			if self.stream is None:
 				return False
-			if self.last_ping is None or \
-					self.last_ping.age() >= self.ping_max_age:
+			if self.last_ping is None or self.last_ping.age() >= self.ping_max_age:
 				self.last_ping = SendPing(self, self.ping_timeout)
 			last_ping = self.last_ping
 		return last_ping.answered(self.ping_timeout)
@@ -300,10 +293,10 @@ class PersistentJabberClient(BaseJabberClient, threading.Thread):
 				self.connect()
 			except pyxmpp.exceptions.FatalStreamError as exc:
 				logger.info("Connect failed with %s", exc)
-				continue # try again
+				continue  # try again
 			except socket.error as exc:
 				logger.info("Connect failed with socket error %s", exc)
-				continue # try again
+				continue  # try again
 			else:
 				logger.debug("Jabber connect completed successfully.")
 				return
@@ -329,8 +322,7 @@ class PersistentJabberClient(BaseJabberClient, threading.Thread):
 					self.client_lock.release()
 					logger.debug("jabber thread waiting for input")
 					try:
-						ifds, _, efds = select.select([stream.socket,
-							self.reconnect_trigger_read], [], [stream.socket], 60)
+						ifds, _, efds = select.select([stream.socket, self.reconnect_trigger_read], [], [stream.socket], 60)
 					finally:
 						self.client_lock.acquire()
 					if self.terminating:
@@ -338,7 +330,7 @@ class PersistentJabberClient(BaseJabberClient, threading.Thread):
 						break
 					elif self.reconnect_trigger_read in ifds:
 						logger.debug("jabber thread received reconnect trigger")
-						os.read(self.reconnect_trigger_read, 1) # consume trigger
+						os.read(self.reconnect_trigger_read, 1)  # consume trigger
 						self.do_reconnect()
 					elif stream.socket in ifds or stream.socket in efds:
 						logger.debug("jabber thread processing connection event")
@@ -380,25 +372,22 @@ class PersistentJabberClient(BaseJabberClient, threading.Thread):
 		@raises PyNotifyDPermanentError:
 		@raises PyNotifyDTemporaryError:
 		"""
-		if not self.connection_is_usable: # unlocked access, this is racy in any case
+		deliver = None
+		if not self.connection_is_usable:  # unlocked access, this is racy in any case
 			self.initiate_reconnect()
-			raise pynotifyd.PyNotifyDTemporaryError(
-					"jabber client connection is not ready")
+			raise pynotifyd.PyNotifyDTemporaryError("jabber client connection is not ready")
 		try:
 			self.roster.get_item_by_jid(target)
 		except KeyError:
-			raise pynotifyd.PyNotifyDPermanentError(
-					"contact is not on my roster")
+			raise pynotifyd.PyNotifyDPermanentError("contact is not on my roster")
 		if not self.check_availability():
 			self.initiate_reconnect()
-			raise pynotifyd.PyNotifyDTemporaryError(
-					"jabber server does not respond to ping, reconnecting")
+			raise pynotifyd.PyNotifyDTemporaryError("jabber server does not respond to ping, reconnecting")
 		with self.client_lock:
 			try:
 				inner = self.contacts[target.bare()]
 			except KeyError:
-				raise pynotifyd.PyNotifyDTemporaryError(
-						"target contact is offline")
+				raise pynotifyd.PyNotifyDTemporaryError("target contact is offline")
 			deliver = []
 			for jid, (settings, state) in inner.items():
 				if settings == u"disable":
@@ -414,17 +403,18 @@ class PersistentJabberClient(BaseJabberClient, threading.Thread):
 					# Do not trigger temporary errors.
 					deliver.append(None)
 				else:
-					deliver.append(pyxmpp.message.Message(to_jid=jid,
-						body=message))
+					deliver.append(pyxmpp.message.Message(to_jid=jid, body=message))
 		for message in deliver:
 			if message is not None:
 				logger.debug("Sending xmpp message to %s." % astr(message.get_to()))
 				self.stream.send(message)
 		if not deliver:
-			raise pynotifyd.PyNotifyDTemporaryError(
-					"no usable resources/states found for contact")
+			raise pynotifyd.PyNotifyDTemporaryError("no usable resources/states found for contact")
+
 
 __all__.append("ProviderPersistentJabber")
+
+
 class ProviderPersistentJabber(pynotifyd.providers.ProviderBase):
 	"""Send a jabber message.
 
@@ -447,17 +437,15 @@ class ProviderPersistentJabber(pynotifyd.providers.ProviderBase):
 		@type config: dict-like
 		"""
 		myjid = pyxmpp.jid.JID(config["jid"])
-		if myjid.node is None or myjid.resource is None: # pylint: disable=E1101
-			raise pynotifyd.PyNotifyDConfigurationError(
-					"jid must be of the form node@domain/resource")
+		if myjid.node is None or myjid.resource is None:  # pylint: disable=E1101
+			raise pynotifyd.PyNotifyDConfigurationError("jid must be of the form node@domain/resource")
 		self.client_thread = PersistentJabberClient(myjid, config["password"])
 		self.client_thread.start()
 
 	def sendmessage(self, recipient, message):
 		jid, exclude_resources, include_states = validate_recipient(recipient)
 		# The following raises a number of pynotifyd exceptions.
-		self.client_thread.send_message(jid, message,
-				exclude_resources.__contains__, include_states.__contains__)
+		self.client_thread.send_message(jid, message, exclude_resources.__contains__, include_states.__contains__)
 
 	def terminate(self):
 		self.client_thread.terminating = True
