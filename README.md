@@ -1,19 +1,28 @@
 #pynotifyd
 
-Notification Daemon for Nagios Notifications through Jabber/XMPP and Mobile Short Messages (SMS).
+Notification Daemon for Notifications through various plugins (common plugins are Jabber/XMPP instant messaging and Mobile Short Messages (SMS) providers using a Web API).
 
-The pynotifyd is providing a solution for sending Notifications to users by Jabber/XMPP and depending on their Jabber Online Status to mobile phone numbers as a short message, if the user is offline or the online status (for example away) is not matching a defined criteria.
+Pynotifyd is providing a solution for sending Notifications to users 
+by Instant Messaging (Jabber/XMPP) and depending on their Online Status to mobile phone numbers by short message, if the user is offline or the Online status (for example away) is not matching a defined criteria. Plugins exist for Jabber/XMPP and some SMS providers (Sipgate, T-Mobile Developergarden). Other handlers can be easily added by implementing a plugin or calling a shell command.
 
 ##Introduction
-pynotifyd comes as a library, a daemon and a client. It requires the following Python modules:
+pynotifyd comes as a library, a daemon and a client. It requires at least Python 2.5 and the following Python modules:
 
-configobj
-pyxmpp
-pyinotify
+* configobj
 
-and a json module.
+For Jabber/XMPP you will need:
 
-Both the client and the daemon share a configuration file. It contains a queue directory which must be writable to the client. The client enqueues a message by adding a file to the queue directory. The daemon notices the file (using inotify) and starts processing the message. It tries different providers and waits some time according to a retry logic defined in the configuration file.
+* pyxmpp
+* libxml2
+
+For T-Mobile Developergarden you will need:
+
+* a json module (cjson, Python >=2.6 json or json from json-py)
+
+For notifications of new queue files (inotify) you should consider installing pyinotify. Otherwise a signal handler is used.
+
+Both the client and the daemon share a configuration file. It contains a queue directory which must be writable to the client and must not contain any other files. 
+The client enqueues a message by adding a file to the queue directory. The daemon notices the file (using inotify) and starts processing the message. It tries different providers and waits some time according to a retry logic defined in the configuration file.
 
 Most of the code is to be found in the library part, so you can base different applications on this library or use just part of the functionality (such as talking to a specific sms provider). Specifically the configuration of providers is documented in the Python doc strings of the providers respectively. The repository also includes an example configuration file with comments.
 
