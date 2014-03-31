@@ -1,8 +1,8 @@
 #!/usr/bin/python
 
-import distutils.core
+from setuptools import setup
 
-distutils.core.setup(name='pynotifyd',
+setup(name='pynotifyd',
 	version='0.90',
 	description="Python Notification Daemon",
 	long_description="The daemon allows you to send a message to a contact via jabber, email or sms whatever fits best. It is intended for use with Nagios.",

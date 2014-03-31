@@ -4,7 +4,7 @@ Uploaders: Helmut Grohne <h.grohne@cygnusnetworks.de>
 Standards-Version: 3.8.0
 Section: python
 Priority: extra
-Build-Depends: debhelper (>= 7), python
+Build-Depends: debhelper (>= 7), python, python-setuptools
 XS-Python-Version: >= 2.5
 
 Package: python-pynotifyd
