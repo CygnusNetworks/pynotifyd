@@ -26,11 +26,12 @@ import pynotifyd.queue
 import pynotifyd.providers.all
 from optparse import OptionParser
 
+HAS_SETPROCTITLE = False
 try:
 	from setproctitle import setproctitle
+	HAS_SETPROCTITLE = True
 except ImportError:
-	def setproctitle(_):
-		die("Cannot set process title: setproctitle module not found.")
+	pass
 
 logger = logging.getLogger("pynotifyd.daemon")
 
@@ -190,7 +191,7 @@ def main():
 	except pynotifyd.PyNotifyDError, err:
 		die_exc(err)
 
-	if config["general"].get("proctitle"):
+	if config["general"].get("proctitle") and HAS_SETPROCTITLE:
 		setproctitle(config["general"]["proctitle"])
 
 	dw = dw(config["general"]["queuedir"])
