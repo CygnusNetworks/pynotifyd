@@ -24,11 +24,11 @@ else:
 import pynotifyd
 import pynotifyd.queue
 import pynotifyd.providers.all
-from optparse import OptionParser
+import optparse
 
 HAS_SETPROCTITLE = False
 try:
-	from setproctitle import setproctitle
+	import setproctitle
 	HAS_SETPROCTITLE = True
 except ImportError:
 	pass
@@ -130,7 +130,7 @@ def syslog_handler(ident):
 
 def main():
 	def_config = "/etc/pynotifyd.conf"
-	parser = OptionParser(usage="Usage: %prog [options]")
+	parser = optparse.OptionParser(usage="Usage: %prog [options]")
 	parser.add_option("-c", "--config", dest="configfile", default=def_config,
 			help="use FILE as configuration file", metavar="FILE")
 	parser.add_option("-f", "--foreground", dest="foreground", default=False,
@@ -192,7 +192,7 @@ def main():
 		die_exc(err)
 
 	if config["general"].get("proctitle") and HAS_SETPROCTITLE:
-		setproctitle(config["general"]["proctitle"])
+		setproctitle.setproctitle(config["general"]["proctitle"])
 
 	dw = dw(config["general"]["queuedir"])
 
