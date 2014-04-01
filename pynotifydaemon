@@ -143,15 +143,10 @@ def main():
 
 	def_config = "/etc/pynotifyd.conf"
 	parser = optparse.OptionParser(usage="Usage: %prog [options]")
-	parser.add_option("-c", "--config", dest="configfile", default=def_config,
-					  help="use FILE as configuration file", metavar="FILE")
-	parser.add_option("-f", "--foreground", dest="foreground", default=False,
-					  help="do not fork into background", action="store_true")
-	parser.add_option("--clearqueue", dest="clearqueue", default=False,
-					  help="clear the queue prior to starting up", action="store_true")
-	parser.add_option("--debuglibs", default=False, dest="debuglibs",
-					  help="include very verbose log message from all libraries employed",
-					  action="store_true")
+	parser.add_option("-c", "--config", dest="configfile", default=def_config, help="use FILE as configuration file", metavar="FILE")
+	parser.add_option("-f", "--foreground", dest="foreground", default=False, help="do not fork into background", action="store_true")
+	parser.add_option("--clearqueue", dest="clearqueue", default=False, help="clear the queue prior to starting up", action="store_true")
+	parser.add_option("--debuglibs", default=False, dest="debuglibs", help="include very verbose log message from all libraries employed", action="store_true")
 	options, args = parser.parse_args()
 
 	mainlogger = logging.getLogger(None if options.debuglibs else "pynotifyd")
