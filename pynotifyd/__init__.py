@@ -154,8 +154,10 @@ def read_config(filename):
 	spec["hostname"] = "string(default=%r)" % socket.getfqdn()
 	try:
 		config = configobj.ConfigObj(filename, interpolation="template", configspec=spec, file_error=True)
-	except OSError:
-		raise PyNotifyDConfigurationError("Failed to read configuration file named %r" % repr(filename))
+	except IOError, msg:
+		raise PyNotifyDConfigurationError("Failed to read configuration file named %r with IOError: %s" % (filename, msg))
+	except OSError, msg:
+		raise PyNotifyDConfigurationError("Failed to read configuration file named %r with OSError: %s" % (filename, msg))
 
 	# general verification
 	for section_list, key, error in configobj.flatten_errors(config, config.validate(validate.Validator())):
