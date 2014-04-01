@@ -6,25 +6,23 @@ import pynotifyd.providers.developergarden as developergarden
 import pynotifyd
 from optparse import OptionParser
 
+
 def die(message):
 	sys.stderr.write(message + "\n")
 	sys.exit(1)
 
+
 def die_exc(exception):
 	die("error: %s" % str(exception))
 
+
 def main():
 	def_config = "/etc/pynotifyd.conf"
-	parser = OptionParser(
-			usage="Usage: %prog [options] <provider> <action> [params]")
-	parser.add_option("-c", "--config", dest="configfile", default=def_config,
-			help="use FILE as configuration file", metavar="FILE")
+	parser = OptionParser(usage="Usage: %prog [options] <provider> <action> [params]")
+	parser.add_option("-c", "--config", dest="configfile", default=def_config, help="use FILE as configuration file", metavar="FILE")
 	options, args = parser.parse_args()
 
-	actions = dict(
-		request_validation_sms=1,
-		enter_validation_code=2,
-		get_balance=0)
+	actions = dict(request_validation_sms=1, enter_validation_code=2, get_balance=0)
 
 	if not args:
 		die("no provider was given.")
@@ -33,17 +31,14 @@ def main():
 		die("no action was given. actions are: %s" % ", ".join(actions.keys()))
 
 	if args[1] not in actions:
-		die("invalid action (%s). actions are: %s" %
-				(args[1], ", ".join(actions.keys())))
+		die("invalid action (%s). actions are: %s" % (args[1], ", ".join(actions.keys())))
 
 	if len(args) != actions[args[1]] + 2:
-		die("invalid number of params. %s requires exactly %d params." %
-			(args[1], actions[args[1]]))
+		die("invalid number of params. %s requires exactly %d params." % (args[1], actions[args[1]]))
 
 	try:
 		config = pynotifyd.read_config(options.configfile)
-		dg = developergarden.ProviderDevelopergarden(
-				config["providers"][args[0]])
+		dg = developergarden.ProviderDevelopergarden(config["providers"][args[0]])
 		token = dg.get_token()
 		result = getattr(dg, args[1])(token, *args[2:])
 		if result is not None:
