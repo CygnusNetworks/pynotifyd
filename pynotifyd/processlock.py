@@ -4,8 +4,8 @@
 and fault tolerant lock files.
 """
 
-import os
 import errno
+import os
 import time
 
 

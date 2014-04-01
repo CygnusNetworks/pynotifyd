@@ -1,8 +1,8 @@
 #!/usr/bin/env python
 # -*- coding: utf-8 -*-
 
-import smtplib
 import email.mime.text
+import smtplib
 import pynotifyd
 import pynotifyd.providers
 
@@ -37,8 +37,7 @@ class ProviderMail(pynotifyd.providers.ProviderBase):
 			try:
 				mailto = recipient["email"]
 			except KeyError:
-				raise pynotifyd.PyNotifyDConfigurationError(
-						"email address required")
+				raise pynotifyd.PyNotifyDConfigurationError("email address required")
 		else:
 			mailto = self.forceto
 		mail = email.mime.text.MIMEText(self.body.replace("MESSAGE", message))

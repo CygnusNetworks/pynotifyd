@@ -7,7 +7,8 @@ import random
 import time
 import os
 import pynotifyd
-from pynotifyd.processlock import ProcessLock
+import pynotifyd.processlock
+
 
 logger = logging.getLogger("pynotifyd.queue")
 
@@ -204,7 +205,7 @@ class PersistentQueue(object):
 		"""
 		if self.processlock:
 			raise pynotifyd.PyNotifyDError("already locked")
-		self.processlock = ProcessLock(os.path.join(self.queuedir, ".lock"))
+		self.processlock = pynotifyd.processlock.ProcessLock(os.path.join(self.queuedir, ".lock"))
 		if not self.processlock.tryacquire():
 			self.processlock = None
 			raise pynotifyd.PyNotifyDError("failed to lock queuedir")
@@ -215,7 +216,7 @@ class PersistentQueue(object):
 		"""
 		if self.processlock:
 			return self.processlock.getowner()
-		return ProcessLock(os.path.join(self.queuedir, ".lock")).getowner()
+		return pynotifyd.processlock.ProcessLock(os.path.join(self.queuedir, ".lock")).getowner()
 
 	def unlock(self):
 		"""Unlock the queuedir."""

@@ -1,16 +1,17 @@
 #!/usr/bin/env python
 # -*- coding: utf-8 -*-
 
-from pyxmpp.exceptions import JIDError
-from pyxmpp.jabber.client import JabberClient
-from pyxmpp.jid import JID
-from pyxmpp.presence import Presence
+import pyxmpp.exceptions
+import pyxmpp.jabber.client
+import pyxmpp.jid
+import pyxmpp.presence
+
 import pynotifyd
 
 
-class BaseJabberClient(JabberClient, object):
+class BaseJabberClient(pyxmpp.jabber.client.JabberClient, object):
 	def __init__(self, jid, password):
-		JabberClient.__init__(self, jid, password)
+		pyxmpp.jabber.client.JabberClient.__init__(self, jid, password)
 
 	### Section: own hooks
 	def handle_session_started(self):
@@ -45,7 +46,7 @@ class BaseJabberClient(JabberClient, object):
 		self.stream.set_presence_handler("unavailable", self.handle_presence_unavailable)
 		self.handle_session_started()
 		self.request_roster()
-		self.stream.send(Presence())
+		self.stream.send(pyxmpp.presence.Presence())
 
 
 def make_set(value):
@@ -72,8 +73,8 @@ def validate_recipient(recipient):
 	except KeyError:
 		raise pynotifyd.PyNotifyDConfigurationError("missing jabber on contact")
 	try:
-		jid = JID(jid)
-	except JIDError, err:
+		jid = pyxmpp.jid.JID(jid)
+	except pyxmpp.exceptions.JIDError, err:
 		raise pynotifyd.PyNotifyDConfigurationError("failed to parse jabber id: %s" % str(err))
 	try:
 		exclude_resources = make_set(recipient["jabber_exclude_resources"])

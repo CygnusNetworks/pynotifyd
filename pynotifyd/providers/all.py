@@ -5,46 +5,43 @@ provider_drivers = {}
 provider_errors = {}
 
 try:
-	from pynotifyd.providers.developergarden import ProviderDevelopergarden
-	provider_drivers["developergarden"] = ProviderDevelopergarden
+	import pynotifyd.providers.developergarden
+	provider_drivers["developergarden"] = pynotifyd.providers.developergarden.ProviderDevelopergarden
 except Exception, msg:
 	provider_errors["developergarden"] = msg
 
 try:
-	from pynotifyd.providers.sipgate import ProviderSipgate
-	provider_drivers["sipgate"] = ProviderSipgate
+	import pynotifyd.providers.sipgate
+	provider_drivers["sipgate"] = pynotifyd.providers.sipgate.ProviderSipgate
 except Exception, msg:
 	provider_errors["sipgate"] = msg
 
 try:
-	from pynotifyd.providers.shell import ProviderShell
-	provider_drivers["shell"] = ProviderShell
+	import pynotifyd.providers.shell
+	provider_drivers["shell"] = pynotifyd.providers.shell.ProviderShell
 except Exception, msg:
 	provider_errors["shell"] = msg
 
 try:
-	from pynotifyd.providers.mock import ProviderMock
-	provider_drivers["mock"] = ProviderMock
+	import pynotifyd.providers.mock
+	provider_drivers["mock"] = pynotifyd.providers.mock.ProviderMock
 except Exception, msg:
 	provider_errors["mock"] = msg
 
 try:
-	from pynotifyd.providers.jabber import ProviderJabber
-	provider_drivers["jabber"] = ProviderJabber
+	import pynotifyd.providers.jabber
+	provider_drivers["jabber"] = pynotifyd.providers.jabber.ProviderJabber
 except Exception, msg:
 	provider_errors["jabber"] = msg
 
 try:
-	from pynotifyd.providers.mail import ProviderMail
-	provider_drivers["mail"] = ProviderMail
+	import pynotifyd.providers.mail
+	provider_drivers["mail"] = pynotifyd.providers.mail.ProviderMail
 except Exception, msg:
 	provider_errors["mail"] = msg
 
 try:
-	from pynotifyd.providers.persistentjabber import ProviderPersistentJabber
-	provider_drivers["persistentjabber"] = ProviderPersistentJabber
+	import pynotifyd.providers.persistentjabber
+	provider_drivers["persistentjabber"] = pynotifyd.providers.persistentjabber.ProviderPersistentJabber
 except Exception, msg:
 	provider_errors["persistentjabber"] = msg
-
-
-

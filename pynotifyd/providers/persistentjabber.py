@@ -10,15 +10,15 @@ import threading
 import time
 
 import pyxmpp.exceptions
+import pyxmpp.iq
 import pyxmpp.jabber.client
 import pyxmpp.jid
 import pyxmpp.message
-from pyxmpp.presence import Presence
-import pyxmpp.iq
+import pyxmpp.presence
 
 import pynotifyd
 import pynotifyd.providers
-from pynotifyd.providers.jabbercommon import BaseJabberClient, validate_recipient
+import pynotifyd.providers.jabbercommon
 
 logger = logging.getLogger("pynotifyd.providers.persistentjabber")
 
@@ -80,7 +80,6 @@ class SendPing(object):
 	"""Construct and send a XMPPC2SPing and set up response handlers."""
 	def __init__(self, client, timeout=60):
 		"""
-		@type client: JabberClient
 		@type timeout: float
 		@param timeout: maximum number of seconds to wait for an answer
 		"""
@@ -119,7 +118,7 @@ class SendPing(object):
 		return time.time() - self.sent
 
 
-class PersistentJabberClient(BaseJabberClient, threading.Thread):
+class PersistentJabberClient(pynotifyd.providers.jabbercommon.BaseJabberClient, threading.Thread):
 	"""Maintains a persistent jabber connection, presence states of contacts
 	and user defined per-resource settings.
 
@@ -159,7 +158,7 @@ class PersistentJabberClient(BaseJabberClient, threading.Thread):
 		@type jid: pyxmpp.jid.JID
 		@type password: str
 		"""
-		BaseJabberClient.__init__(self, jid, password)
+		pynotifyd.providers.jabbercommon.BaseJabberClient.__init__(self, jid, password)
 		threading.Thread.__init__(self)
 		self.ping_max_age = ping_max_age
 		self.ping_timeout = ping_timeout
@@ -202,7 +201,7 @@ class PersistentJabberClient(BaseJabberClient, threading.Thread):
 			pass
 		else:
 			statusmap = {u"normal": None, u"ignore": u"away", u"disable": u"dnd"}
-			self.stream.send(Presence(to_jid=jid, show=statusmap[body]))
+			self.stream.send(pyxmpp.presence.Presence(to_jid=jid, show=statusmap[body]))
 
 	### Section: BaseJabberClient API methods
 	def handle_session_started(self):
@@ -438,7 +437,7 @@ class ProviderPersistentJabber(pynotifyd.providers.ProviderBase):
 		self.client_thread.start()
 
 	def sendmessage(self, recipient, message):
-		jid, exclude_resources, include_states = validate_recipient(recipient)
+		jid, exclude_resources, include_states = pynotifyd.providers.jabbercommon.validate_recipient(recipient)
 		# The following raises a number of pynotifyd exceptions.
 		self.client_thread.send_message(jid, message, exclude_resources.__contains__, include_states.__contains__)
 

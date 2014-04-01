@@ -8,10 +8,10 @@ import pyxmpp.presence
 import time
 import pynotifyd
 import pynotifyd.providers
-from pynotifyd.providers.jabbercommon import BaseJabberClient, validate_recipient
+import pynotifyd.providers.jabbercommon
 
 
-class SendJabberClient(BaseJabberClient, object):
+class SendJabberClient(pynotifyd.providers.jabbercommon.BaseJabberClient, object):
 	def __init__(self, jid, password, target, message, exclude_resources, include_states):
 		"""
 		@type jid: pyxmpp.jid.JID
@@ -21,7 +21,7 @@ class SendJabberClient(BaseJabberClient, object):
 		@type exclude_resources: str -> bool
 		@type include_states: str -> bool
 		"""
-		BaseJabberClient.__init__(self, jid, password)
+		pynotifyd.providers.jabbercommon.BaseJabberClient.__init__(self, jid, password)
 		self.target = target
 		self.message = pyxmpp.message.Message(to_jid=self.target, body=message)
 		self.exclude_resources = exclude_resources
@@ -99,12 +99,10 @@ class ProviderJabber(pynotifyd.providers.ProviderBase, object):
 		self.timeout = int(config["timeout"])
 
 	def sendmessage(self, recipient, message):
-		jid, exclude_resources, include_states = validate_recipient(recipient)
-		client = SendJabberClient(self.jid, self.password, jid, message,
-				exclude_resources.__contains__, include_states.__contains__)
+		jid, exclude_resources, include_states = pynotifyd.providers.jabbercommon.validate_recipient(recipient)
+		client = SendJabberClient(self.jid, self.password, jid, message, exclude_resources.__contains__, include_states.__contains__)
 		client.connect()
 		client.loop_timeout(self.timeout)
 		client.disconnect_once()
 		if client.failure:
 			raise client.failure
-

@@ -1,8 +1,9 @@
 #!/usr/bin/env python
 # -*- coding: utf-8 -*-
 
-import xmlrpclib
 import urllib
+import xmlrpclib
+
 import pynotifyd
 import pynotifyd.providers
 
