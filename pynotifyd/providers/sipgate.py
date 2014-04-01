@@ -6,8 +6,6 @@ import urllib
 import pynotifyd
 import pynotifyd.providers
 
-__all__ = ["ProviderSipgate"]
-
 
 class ProviderSipgate(pynotifyd.providers.SMSProviderBase):
 	"""Send a sms using http://www.sipgate.de/ via xmlrpc.

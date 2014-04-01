@@ -9,8 +9,6 @@ import os
 import pynotifyd
 from pynotifyd.processlock import ProcessLock
 
-__all__ = []
-
 logger = logging.getLogger("pynotifyd.queue")
 
 
@@ -23,8 +21,6 @@ def generate_unique_id():
 	generate_unique_id.counter += 1
 	return "".join(["%s%x" % (key, value) for key, value in tokens])
 generate_unique_id.counter = 0
-
-__all__.append("QueueEntry")
 
 
 class QueueEntry(object):
@@ -86,8 +82,6 @@ class QueueEntry(object):
 
 	def __repr__(self):
 		return "%s(%r)" % (self.__class__.__name__, self.filename)
-
-__all__.append("PersistentQueue")
 
 
 class PersistentQueue(object):
@@ -233,9 +227,6 @@ class PersistentQueue(object):
 		"""Removes all entries from the queue without processing them."""
 		for entry in self.iter_entries():
 			self.entry_done(entry)
-
-
-__all__.append("process_queue_step")
 
 
 def process_queue_step(config, queue, providers):

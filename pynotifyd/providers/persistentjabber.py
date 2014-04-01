@@ -20,8 +20,6 @@ import pynotifyd
 import pynotifyd.providers
 from pynotifyd.providers.jabbercommon import BaseJabberClient, validate_recipient
 
-__all__ = []
-
 logger = logging.getLogger("pynotifyd.providers.persistentjabber")
 
 
@@ -410,9 +408,6 @@ class PersistentJabberClient(BaseJabberClient, threading.Thread):
 				self.stream.send(message)
 		if not deliver:
 			raise pynotifyd.PyNotifyDTemporaryError("no usable resources/states found for contact")
-
-
-__all__.append("ProviderPersistentJabber")
 
 
 class ProviderPersistentJabber(pynotifyd.providers.ProviderBase):

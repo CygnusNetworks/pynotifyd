@@ -9,40 +9,44 @@ import select
 import time
 import validate
 
-__all__ = []
 
-__all__.append("PyNotifyDError")
+config_spec = configobj.ConfigObj("""
+[general]
+queuedir = string(min=1)
+retry = list(min=1)
+notify = option("inotify", "signal")
+[contacts]
+[[__many__]]
+[providers]
+[[__many__]]
+driver = string(min=1)
+""".splitlines(), interpolation=False, list_values=False)
 
 
 class PyNotifyDError(Exception):
 	"""Base class for PyNotifyD Exceptions."""
-
-__all__.append("PyNotifyDPermanentError")
+	pass
 
 
 class PyNotifyDPermanentError(PyNotifyDError):
 	"""This exception indicates a problem that cannot be solved by
 	simply trying again later."""
-
-__all__.append("PyNotifyDConfigurationError")
+	pass
 
 
 class PyNotifyDConfigurationError(PyNotifyDPermanentError):
 	"""This exception indicates a problem with the configuration file."""
-
-__all__.append("PyNotifyDTemporaryError")
+	pass
 
 
 class PyNotifyDTemporaryError(PyNotifyDError):
 	"""This exception indicates a temporary problem with the provider."""
-
-__all__.append("SignalDirectoryWatcher")
+	pass
 
 
 class SignalDirectoryWatcher(object):
-	def __init__(self, directory, maxwaittime=3600, signum=signal.SIGUSR1):
+	def __init__(self, _, maxwaittime=3600, signum=signal.SIGUSR1):
 		"""
-		@type directory: str
 		@type maxwaittime: int
 		@type signum: int or None
 		@param signum: unless None a signal handler is installed for
@@ -64,12 +68,11 @@ class SignalDirectoryWatcher(object):
 			maxwait = min(maxwait, self.maxwaittime)
 		time.sleep(maxwait)  # interrupted by signal
 
-__all__.append("InotifyDirectoryWatcher")
 try:
 	import pyinotify
 except ImportError:
 	class InotifyDirectoryWatcher(object):
-		def __init__(self, directory):
+		def __init__(self, _):
 			raise ImportError("failed to import pyinotify")
 else:
 	class InotifyDirectoryWatcher(object):
@@ -110,18 +113,6 @@ else:
 				self.notifier.read_events()  # nonblocking read
 				self.notifier.process_events()  # clean queue
 
-config_spec = configobj.ConfigObj("""
-[general]
-queuedir = string(min=1)
-retry = list(min=1)
-notify = option("inotify", "signal")
-[contacts]
-[[__many__]]
-[providers]
-[[__many__]]
-driver = string(min=1)
-""".splitlines(), interpolation=False, list_values=False)
-
 
 def get_the_item(obj, key):
 	"""
@@ -151,8 +142,6 @@ def validate_contact(contact):
 	for email in get_the_item(contact, "email"):
 		if '@' not in email:
 			raise PyNotifyDConfigurationError("an email address has to contain an @ sign")
-
-__all__.append("read_config")
 
 
 def read_config(filename):

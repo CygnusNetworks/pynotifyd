@@ -6,8 +6,6 @@ import random
 import pynotifyd
 import pynotifyd.providers
 
-__all__ = ["ProviderMock"]
-
 
 class ProviderMock(pynotifyd.providers.ProviderBase):
 	"""Do nothing and fail configurably.

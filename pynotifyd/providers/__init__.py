@@ -3,8 +3,6 @@
 
 import pynotifyd
 
-__all__ = ["ProviderBase"]
-
 
 class ProviderBase(object):
 	def sendmessage(self, recipient, message):

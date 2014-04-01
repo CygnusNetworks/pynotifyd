@@ -6,8 +6,6 @@ import email.mime.text
 import pynotifyd
 import pynotifyd.providers
 
-__all__ = ["ProviderMail"]
-
 
 class ProviderMail(pynotifyd.providers.ProviderBase):
 	"""Send message via email.

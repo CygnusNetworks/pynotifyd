@@ -55,9 +55,6 @@ except ImportError:
 			except RuntimeError: # try json.loads(500*"[")
 				raise json_exception("recursion depth exceeded")
 
-__all__ = []
-
-__all__.append("ProviderDevelopergarden")
 class ProviderDevelopergarden(pynotifyd.providers.SMSProviderBase):
 	"""Send sms via http://www.developergarden.com using the rest
 	interface.

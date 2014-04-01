@@ -10,8 +10,6 @@ import pynotifyd
 import pynotifyd.providers
 from pynotifyd.providers.jabbercommon import BaseJabberClient, validate_recipient
 
-__all__ = []
-
 
 class SendJabberClient(BaseJabberClient, object):
 	def __init__(self, jid, password, target, message, exclude_resources, include_states):
@@ -74,7 +72,6 @@ class SendJabberClient(BaseJabberClient, object):
 			stream = self.get_stream()
 			now = time.time()
 
-__all__.append("ProviderJabber")
 class ProviderJabber(pynotifyd.providers.ProviderBase, object):
 	"""Send a jabber message.
 

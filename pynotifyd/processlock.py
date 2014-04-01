@@ -4,13 +4,9 @@
 and fault tolerant lock files.
 """
 
-__all__ = []
-
 import os
 import errno
 import time
-
-__all__.append("ProcessLock")
 
 
 class ProcessLock(object):

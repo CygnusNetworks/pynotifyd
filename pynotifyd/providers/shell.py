@@ -5,8 +5,6 @@ import subprocess
 import pynotifyd
 import pynotifyd.providers
 
-__all__ = ["ProviderShell"]
-
 
 class ProviderShell(pynotifyd.providers.ProviderBase):
 	"""Send a message using a shell command.
