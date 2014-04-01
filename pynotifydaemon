@@ -139,7 +139,7 @@ def syslog_handler(ident):
 
 
 def main():
-	config = dw = queue = None
+	config = directory_watcher = queue = None
 
 	def_config = "/etc/pynotifyd.conf"
 	parser = optparse.OptionParser(usage="Usage: %prog [options]")
@@ -175,9 +175,9 @@ def main():
 		chuid(config["general"]["chuid"])
 
 	if config["general"]["notify"] == "inotify":
-		dw = pynotifyd.InotifyDirectoryWatcher
+		directory_watcher = pynotifyd.InotifyDirectoryWatcher
 	elif config["general"]["notify"] == "signal":
-		dw = pynotifyd.SignalDirectoryWatcher
+		directory_watcher = pynotifyd.SignalDirectoryWatcher
 	else:
 		die("unknown notify method %r" % config["general"]["notify"])
 
@@ -205,7 +205,7 @@ def main():
 	if config["general"].get("proctitle") and HAS_SETPROCTITLE:
 		setproctitle.setproctitle(config["general"]["proctitle"])
 
-	dw = dw(config["general"]["queuedir"])
+	directory_watcher_handle = directory_watcher(config["general"]["queuedir"])
 
 	try:
 		queue.lock()
@@ -235,7 +235,7 @@ def main():
 				logger.debug("queue empty, sleeping ")
 			else:
 				logger.debug("sleeping up to %.1f seconds" % wait)
-			dw(wait)
+			directory_watcher_handle(wait)
 		logger.debug("terminating due to SIGTERM")
 	finally:
 		for name, provider in providers.items():
