@@ -2,9 +2,13 @@
 # -*- coding: utf-8 -*-
 
 import sys
-import pynotifyd.base.developergarden as developergarden
-import pynotifyd
+
 from optparse import OptionParser
+
+import pynotifyd.config
+import pynotifyd.errors
+import pynotifyd.providers.base
+import pynotifyd.providers.developergarden
 
 
 def die(message):
@@ -37,13 +41,13 @@ def main():
 		die("invalid number of params. %s requires exactly %d params." % (args[1], actions[args[1]]))
 
 	try:
-		config = pynotifyd.read_config(options.configfile)
-		dg = developergarden.ProviderDevelopergarden(config["providers"][args[0]])
+		config = pynotifyd.config.read_config(options.configfile)
+		dg = pynotifyd.providers.developergarden.ProviderDevelopergarden(config["providers"][args[0]])
 		token = dg.get_token()
 		result = getattr(dg, args[1])(token, *args[2:])
 		if result is not None:
 			print(result)
-	except pynotifyd.PyNotifyDError, err:
+	except pynotifyd.errors.PyNotifyDError, err:
 		die_exc(err)
 
 if __name__ == '__main__':
