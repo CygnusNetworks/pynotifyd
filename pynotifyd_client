@@ -2,11 +2,14 @@
 # -*- coding: utf-8 -*-
 
 import os
-import pynotifyd
-import pynotifyd.queue
-from optparse import OptionParser
 import signal
 import sys
+
+from optparse import OptionParser
+
+import pynotifyd.config
+import pynotifyd.errors
+import pynotifyd.queue
 
 
 def die(message):
@@ -27,10 +30,10 @@ def main():
 	options, args = parser.parse_args()
 
 	try:
-		config = pynotifyd.read_config(options.configfile)
+		config = pynotifyd.config.read_config(options.configfile)
 
 		queue = pynotifyd.queue.PersistentQueue(config["general"]["queuedir"], config["general"]["retry"])
-	except pynotifyd.PyNotifyDError, err:
+	except pynotifyd.errors.PyNotifyDError, err:
 		die_exc(err)
 
 	if options.stdin:
@@ -49,7 +52,7 @@ def main():
 
 	try:
 		queue.enqueue(recipient, message)
-	except pynotifyd.PyNotifyDError, err:
+	except pynotifyd.errors.PyNotifyDError, err:
 		die_exc(err)
 
 	if config["general"]["notify"] == "signal":
