@@ -2,11 +2,12 @@
 # -*- coding: utf-8 -*-
 #
 import subprocess
-import pynotifyd
-import pynotifyd.providers
+
+from .. import errors
+import base
 
 
-class ProviderShell(pynotifyd.providers.ProviderBase):
+class ProviderShell(base.ProviderBase):
 	"""Send a message using a shell command.
 
 	Required configuration options:
@@ -24,9 +25,9 @@ class ProviderShell(pynotifyd.providers.ProviderBase):
 		try:
 			command = config["command"]
 		except KeyError:
-			raise pynotifyd.PyNotifyDConfigurationError("shell driver requires a command")
+			raise errors.PyNotifyDConfigurationError("shell driver requires a command")
 		if not isinstance(command, str):
-			raise pynotifyd.PyNotifyDConfigurationError("command option is not a string")
+			raise errors.PyNotifyDConfigurationError("command option is not a string")
 		self.command = command.split()
 		message_on_stdin = config.get("message_on_stdin", "no").strip().lower()
 		self.message_on_stdin = message_on_stdin not in ('no', 'false', '0')
@@ -48,6 +49,6 @@ class ProviderShell(pynotifyd.providers.ProviderBase):
 				proc = subprocess.Popen(command)
 			retcode = proc.wait()
 			if retcode != 0:
-				raise pynotifyd.PyNotifyDTemporaryError("received nonzero exit code from shell: %d" % retcode)
+				raise errors.PyNotifyDTemporaryError("received nonzero exit code from shell: %d" % retcode)
 		except OSError, exc:
-			raise pynotifyd.PyNotifyDPermanentError("received OSError while calling shell: %s" % str(exc))
+			raise errors.PyNotifyDPermanentError("received OSError while calling shell: %s" % str(exc))

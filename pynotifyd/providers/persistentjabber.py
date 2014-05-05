@@ -16,9 +16,9 @@ import pyxmpp.jid
 import pyxmpp.message
 import pyxmpp.presence
 
-import pynotifyd
-import pynotifyd.providers
-import pynotifyd.providers.jabbercommon
+from .. import errors
+import base
+import jabbercommon
 
 logger = logging.getLogger("pynotifyd.providers.persistentjabber")
 
@@ -29,7 +29,7 @@ def astr(obj):
 	return unicode(obj).encode("ascii", "replace")
 
 
-class XMPPC2SPing(pyxmpp.iq.Iq, object):
+class XMPPC2SPing(pyxmpp.iq.Iq, object):  # pylint:disable=R0904
 	"""Creates ping message from the passed jid to its server."""
 	def __init__(self, myjid):
 		"""
@@ -118,17 +118,17 @@ class SendPing(object):
 		return time.time() - self.sent
 
 
-class PersistentJabberClient(pynotifyd.providers.jabbercommon.BaseJabberClient, threading.Thread):
+class PersistentJabberClient(jabbercommon.BaseJabberClient, threading.Thread):  # pylint:disable=R0902,R0904
 	"""Maintains a persistent jabber connection, presence states of contacts
 	and user defined per-resource settings.
 
 	Users may change their settings by sending messages:
-	 - "ignore": Further messages are pretended to be delivered without
+	- "ignore": Further messages are pretended to be delivered without
 	   being delivered.
-	 - "disable": This resource will not receive further messages. Other ways
+	- "disable": This resource will not receive further messages. Other ways
 	   of contacting the user are tried.
-	 - "normal": Reset configuration to normal delivery.
-	 - "help": Print help text.
+	- "normal": Reset configuration to normal delivery.
+	- "help": Print help text.
 
 	Once a user goes offline or pynotifyd is restarted these settings are reset
 	back to "normal".
@@ -153,12 +153,12 @@ class PersistentJabberClient(pynotifyd.providers.jabbercommon.BaseJabberClient, 
 	@type terminating: bool
 	@ivar terminating: whether the client is about to shut down
 	"""
-	def __init__(self, jid, password, ping_max_age=0, ping_timeout=10, reconnect_timeout=60):
+	def __init__(self, jid, password, ping_max_age=0, ping_timeout=10, reconnect_timeout=60):  # pylint:disable=R0913
 		"""
 		@type jid: pyxmpp.jid.JID
 		@type password: str
 		"""
-		pynotifyd.providers.jabbercommon.BaseJabberClient.__init__(self, jid, password)
+		jabbercommon.BaseJabberClient.__init__(self, jid, password)
 		threading.Thread.__init__(self)
 		self.ping_max_age = ping_max_age
 		self.ping_timeout = ping_timeout
@@ -183,10 +183,10 @@ class PersistentJabberClient(pynotifyd.providers.jabbercommon.BaseJabberClient, 
 		body = stanza.get_body()
 		if body == u"help":
 			helpmessage = u"""Valid commands:
- - "ignore": Further messages are pretended to be delivered without being delivered.
- - "disable": This resource will not receive further messages. Other ways of contacting the user are tried.
- - "normal": Reset configuration to normal delivery.
- - "help": Print this help text.
+- "ignore": Further messages are pretended to be delivered without being delivered.
+- "disable": This resource will not receive further messages. Other ways of contacting the user are tried.
+- "normal": Reset configuration to normal delivery.
+- "help": Print this help text.
 """
 			self.stream.send(pyxmpp.message.Message(to_jid=jid, body=helpmessage))
 			return
@@ -208,19 +208,19 @@ class PersistentJabberClient(pynotifyd.providers.jabbercommon.BaseJabberClient, 
 		self.stream.set_message_handler("normal", self.handle_message_normal)
 
 	def handle_contact_available(self, jid, state):
-		logger.debug("contact %s went online with state %r" % (astr(jid), state))
+		logger.debug("contact %s went online with state %r", astr(jid), state)
 		inner = self.contacts.setdefault(jid.bare(), dict())
 		inner[jid] = (u"normal", state)
 
 	def handle_contact_unavailable(self, jid):
-		logger.debug("contact %s went offline" % (astr(jid),))
+		logger.debug("contact %s went offline", astr(jid))
 		try:
 			inner = self.contacts[jid.bare()]  # raises KeyError
 			del inner[jid]  # raises KeyError
 			if not inner:
 				del self.contacts[jid.bare()]
 		except KeyError:
-			logger.info("could not find jid %s in my online list" % (astr(jid),))
+			logger.info("could not find jid %s in my online list", astr(jid))
 
 	### Section: pyxmpp JabberClient API methods
 	def roster_updated(self, item=None):
@@ -372,29 +372,29 @@ class PersistentJabberClient(pynotifyd.providers.jabbercommon.BaseJabberClient, 
 		deliver = None
 		if not self.connection_is_usable:  # unlocked access, this is racy in any case
 			self.initiate_reconnect()
-			raise pynotifyd.PyNotifyDTemporaryError("jabber client connection is not ready")
+			raise errors.PyNotifyDTemporaryError("jabber client connection is not ready")
 		try:
 			self.roster.get_item_by_jid(target)
 		except KeyError:
-			raise pynotifyd.PyNotifyDPermanentError("contact is not on my roster")
+			raise errors.PyNotifyDPermanentError("contact is not on my roster")
 		if not self.check_availability():
 			self.initiate_reconnect()
-			raise pynotifyd.PyNotifyDTemporaryError("jabber server does not respond to ping, reconnecting")
+			raise errors.PyNotifyDTemporaryError("jabber server does not respond to ping, reconnecting")
 		with self.client_lock:
 			try:
 				inner = self.contacts[target.bare()]
 			except KeyError:
-				raise pynotifyd.PyNotifyDTemporaryError("target contact is offline")
+				raise errors.PyNotifyDTemporaryError("target contact is offline")
 			deliver = []
 			for jid, (settings, state) in inner.items():
 				if settings == u"disable":
-					logger.debug("Not sending message to %r. Disabled by user request." % (jid,))
+					logger.debug("Not sending message to %r. Disabled by user request.", jid)
 					continue
 				if exclude_resources(jid.resource):
-					logger.debug("Not sending message to %r. Resource is excluded." % (jid,))
+					logger.debug("Not sending message to %r. Resource is excluded.", jid)
 					continue
 				if not include_states(state):
-					logger.debug("Not sending to %r. State %r is not considered available." % (jid, state))
+					logger.debug("Not sending to %r. State %r is not considered available.", jid, state)
 					continue
 				if settings == u"ignore":
 					# Do not trigger temporary errors.
@@ -403,13 +403,13 @@ class PersistentJabberClient(pynotifyd.providers.jabbercommon.BaseJabberClient, 
 					deliver.append(pyxmpp.message.Message(to_jid=jid, body=message))
 		for message in deliver:
 			if message is not None:
-				logger.debug("Sending xmpp message to %s." % astr(message.get_to()))
+				logger.debug("Sending xmpp message to %s.", astr(message.get_to()))
 				self.stream.send(message)
 		if not deliver:
-			raise pynotifyd.PyNotifyDTemporaryError("no usable resources/states found for contact")
+			raise errors.PyNotifyDTemporaryError("no usable resources/states found for contact")
 
 
-class ProviderPersistentJabber(pynotifyd.providers.ProviderBase):
+class ProviderPersistentJabber(base.ProviderBase):
 	"""Send a jabber message.
 
 	Required configuration options:
@@ -432,12 +432,12 @@ class ProviderPersistentJabber(pynotifyd.providers.ProviderBase):
 		"""
 		myjid = pyxmpp.jid.JID(config["jid"])
 		if myjid.node is None or myjid.resource is None:  # pylint: disable=E1101
-			raise pynotifyd.PyNotifyDConfigurationError("jid must be of the form node@domain/resource")
+			raise errors.PyNotifyDConfigurationError("jid must be of the form node@domain/resource")
 		self.client_thread = PersistentJabberClient(myjid, config["password"])
 		self.client_thread.start()
 
 	def send_message(self, recipient, message):
-		jid, exclude_resources, include_states = pynotifyd.providers.jabbercommon.validate_recipient(recipient)
+		jid, exclude_resources, include_states = jabbercommon.validate_recipient(recipient)
 		# The following raises a number of pynotifyd exceptions.
 		self.client_thread.send_message(jid, message, exclude_resources.__contains__, include_states.__contains__)
 

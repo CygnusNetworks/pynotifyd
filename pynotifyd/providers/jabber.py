@@ -1,18 +1,21 @@
 #!/usr/bin/env python
 # -*- coding: utf-8 -*-
 
+import time
+
 import pyxmpp.jabber.client
 import pyxmpp.message
 import pyxmpp.jid
 import pyxmpp.presence
-import time
-import pynotifyd
-import pynotifyd.providers
-import pynotifyd.providers.jabbercommon
+
+import base
+import jabbercommon
+
+from .. import errors
 
 
-class SendJabberClient(pynotifyd.providers.jabbercommon.BaseJabberClient, object):
-	def __init__(self, jid, password, target, message, exclude_resources, include_states):
+class SendJabberClient(jabbercommon.BaseJabberClient, object):  # pylint:disable=R0904
+	def __init__(self, jid, password, target, message, exclude_resources, include_states):  # pylint:disable=R0913
 		"""
 		@type jid: pyxmpp.jid.JID
 		@type password: str
@@ -21,12 +24,12 @@ class SendJabberClient(pynotifyd.providers.jabbercommon.BaseJabberClient, object
 		@type exclude_resources: str -> bool
 		@type include_states: str -> bool
 		"""
-		pynotifyd.providers.jabbercommon.BaseJabberClient.__init__(self, jid, password)
+		jabbercommon.BaseJabberClient.__init__(self, jid, password)
 		self.target = target
 		self.message = pyxmpp.message.Message(to_jid=self.target, body=message)
 		self.exclude_resources = exclude_resources
 		self.include_states = include_states
-		self.failure = pynotifyd.PyNotifyDTemporaryError("contact not available")
+		self.failure = errors.PyNotifyDTemporaryError("contact not available")
 		self.isdisconnected = False
 
 	### Section: BaseJabberClient API methods
@@ -49,7 +52,7 @@ class SendJabberClient(pynotifyd.providers.jabbercommon.BaseJabberClient, object
 		try:
 			self.roster.get_item_by_jid(self.target)
 		except KeyError:
-			self.failure = pynotifyd.PyNotifyDPermanentError("contact is not my roster")
+			self.failure = errors.PyNotifyDPermanentError("contact is not my roster")
 			# not on roster
 			self.disconnect_once()
 
@@ -72,7 +75,8 @@ class SendJabberClient(pynotifyd.providers.jabbercommon.BaseJabberClient, object
 			stream = self.get_stream()
 			now = time.time()
 
-class ProviderJabber(pynotifyd.providers.ProviderBase, object):
+
+class ProviderJabber(base.ProviderBase, object):
 	"""Send a jabber message.
 
 	Required configuration options:
@@ -99,7 +103,7 @@ class ProviderJabber(pynotifyd.providers.ProviderBase, object):
 		self.timeout = int(config["timeout"])
 
 	def send_message(self, recipient, message):
-		jid, exclude_resources, include_states = pynotifyd.providers.jabbercommon.validate_recipient(recipient)
+		jid, exclude_resources, include_states = jabbercommon.validate_recipient(recipient)
 		client = SendJabberClient(self.jid, self.password, jid, message, exclude_resources.__contains__, include_states.__contains__)
 		client.connect()
 		client.loop_timeout(self.timeout)

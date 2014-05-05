@@ -6,10 +6,10 @@ import pyxmpp.jabber.client
 import pyxmpp.jid
 import pyxmpp.presence
 
-import pynotifyd
+from .. import errors
 
 
-class BaseJabberClient(pyxmpp.jabber.client.JabberClient, object):
+class BaseJabberClient(pyxmpp.jabber.client.JabberClient, object):  # pylint:disable=R0904
 	def __init__(self, jid, password):
 		pyxmpp.jabber.client.JabberClient.__init__(self, jid, password)
 
@@ -53,7 +53,7 @@ def make_set(value):
 	if isinstance(value, list):
 		pass  # ok
 	elif isinstance(value, str):
-		value = map(str.strip, value.split(","))
+		value = [str.strip(x) for x in value.split(",")]
 	else:
 		raise ValueError("invalid value type")
 	return set(value)
@@ -71,23 +71,23 @@ def validate_recipient(recipient):
 	try:
 		jid = recipient["jabber"]
 	except KeyError:
-		raise pynotifyd.PyNotifyDConfigurationError("missing jabber on contact")
+		raise errors.PyNotifyDConfigurationError("missing jabber on contact")
 	try:
 		jid = pyxmpp.jid.JID(jid)
 	except pyxmpp.exceptions.JIDError, err:
-		raise pynotifyd.PyNotifyDConfigurationError("failed to parse jabber id: %s" % str(err))
+		raise errors.PyNotifyDConfigurationError("failed to parse jabber id: %s" % str(err))
 	try:
 		exclude_resources = make_set(recipient["jabber_exclude_resources"])
 	except KeyError:
 		exclude_resources = set()
 	except ValueError, err:
-		raise pynotifyd.PyNotifyDConfigurationError("invalid value for jabber_exclude_resources: %s" % str(err))
+		raise errors.PyNotifyDConfigurationError("invalid value for jabber_exclude_resources: %s" % str(err))
 	try:
 		include_states = make_set(recipient["jabber_include_states"])
 	except KeyError:
 		include_states = {"online", "chat"}
 	except ValueError, err:
-		raise pynotifyd.PyNotifyDConfigurationError("invalid value for jabber_include_states: %s" % str(err))
+		raise errors.PyNotifyDConfigurationError("invalid value for jabber_include_states: %s" % str(err))
 	if not include_states:
-		raise pynotifyd.PyNotifyDConfigurationError("jabber_include_states is empty")
+		raise errors.PyNotifyDConfigurationError("jabber_include_states is empty")
 	return jid, exclude_resources, include_states

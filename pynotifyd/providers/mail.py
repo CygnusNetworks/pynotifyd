@@ -3,11 +3,12 @@
 
 import email.mime.text
 import smtplib
-import pynotifyd
-import pynotifyd.providers
+
+from .. import errors
+import base
 
 
-class ProviderMail(pynotifyd.providers.ProviderBase):
+class ProviderMail(base.ProviderBase):
 	"""Send message via email.
 
 	Required configuration options:
@@ -29,7 +30,7 @@ class ProviderMail(pynotifyd.providers.ProviderBase):
 		try:
 			self.from_ = config["from"]
 		except KeyError:
-			raise pynotifyd.PyNotifyDConfigurationError("from address required")
+			raise errors.PyNotifyDConfigurationError("from address required")
 		self.forceto = config.get("forceto")
 
 	def send_message(self, recipient, message):
@@ -37,7 +38,7 @@ class ProviderMail(pynotifyd.providers.ProviderBase):
 			try:
 				mailto = recipient["email"]
 			except KeyError:
-				raise pynotifyd.PyNotifyDConfigurationError("email address required")
+				raise errors.PyNotifyDConfigurationError("email address required")
 		else:
 			mailto = self.forceto
 		mail = email.mime.text.MIMEText(self.body.replace("MESSAGE", message))
@@ -50,5 +51,4 @@ class ProviderMail(pynotifyd.providers.ProviderBase):
 			server.sendmail(self.from_, [mailto], mail.as_string())
 			server.quit()
 		except smtplib.SMTPException, exc:
-			raise pynotifyd.PyNotifyDTemporaryError(
-					"SMTPException received: %s" % str(exc))
+			raise errors.PyNotifyDTemporaryError("SMTPException received: %s" % str(exc))

@@ -43,7 +43,7 @@ class ProcessLock(object):
 		except ValueError:
 			return None
 
-	def tryacquire(self, handlestale=True):
+	def tryacquire(self, handlestale=True):  # pylint: disable=R0911
 		"""
 		@type handlestale: bool
 		@param handlestale: Whether to clean locks that correspond to

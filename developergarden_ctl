@@ -2,7 +2,7 @@
 # -*- coding: utf-8 -*-
 
 import sys
-import pynotifyd.providers.developergarden as developergarden
+import pynotifyd.base.developergarden as developergarden
 import pynotifyd
 from optparse import OptionParser
 

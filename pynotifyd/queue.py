@@ -6,9 +6,9 @@ import logging
 import random
 import time
 import os
-import pynotifyd
-import pynotifyd.processlock
 
+import errors
+import processlock
 
 logger = logging.getLogger("pynotifyd.queue")
 
@@ -88,9 +88,9 @@ class QueueEntry(object):
 class PersistentQueue(object):
 	def __init__(self, queuedir, retrylogic):
 		if not os.path.isdir(queuedir):
-			raise pynotifyd.PyNotifyDError("queuedir %s does not exist or is not a directory" % queuedir)
+			raise errors.PyNotifyDError("queuedir %s does not exist or is not a directory" % queuedir)
 		if not os.access(queuedir, os.R_OK | os.W_OK | os.X_OK):
-			raise pynotifyd.PyNotifyDError("queuedir %s lacks required permission" % queuedir)
+			raise errors.PyNotifyDError("queuedir %s lacks required permission" % queuedir)
 		self.queuedir = queuedir
 		self.retrylogic = retrylogic
 		self.processlock = None
@@ -134,7 +134,7 @@ class PersistentQueue(object):
 				tmpfile.write("%s\n%s" % (recipient, message))
 			os.rename(tmpname, self.get_path(entry))
 		except OSError, err:
-			raise pynotifyd.PyNotifyDError("failed to create queue file: %s" % str(err))
+			raise errors.PyNotifyDError("failed to create queue file: %s" % str(err))
 		return entry
 
 	def iter_entries(self):
@@ -204,11 +204,11 @@ class PersistentQueue(object):
 		@raises PyNotifyDError:
 		"""
 		if self.processlock:
-			raise pynotifyd.PyNotifyDError("already locked")
-		self.processlock = pynotifyd.processlock.ProcessLock(os.path.join(self.queuedir, ".lock"))
+			raise errors.PyNotifyDError("already locked")
+		self.processlock = processlock.ProcessLock(os.path.join(self.queuedir, ".lock"))
 		if not self.processlock.tryacquire():
 			self.processlock = None
-			raise pynotifyd.PyNotifyDError("failed to lock queuedir")
+			raise errors.PyNotifyDError("failed to lock queuedir")
 
 	def getlockowner(self):
 		"""Return the pid of the process owning the queue lock.
@@ -216,7 +216,7 @@ class PersistentQueue(object):
 		"""
 		if self.processlock:
 			return self.processlock.getowner()
-		return pynotifyd.processlock.ProcessLock(os.path.join(self.queuedir, ".lock")).getowner()
+		return processlock.ProcessLock(os.path.join(self.queuedir, ".lock")).getowner()
 
 	def unlock(self):
 		"""Unlock the queuedir."""
@@ -247,25 +247,25 @@ def process_queue_step(config, queue, providers):
 		return sleep_time
 	providername = queue.get_state(entry)
 	if providername == "GIVEUP":
-		logger.debug("giving up on entry %s" % str(entry))
+		logger.debug("giving up on entry %s", str(entry))
 		queue.entry_done(entry)
 		return 0
 	contactname, message = queue.get_contents(entry)
 	recipient = dict(name=contactname)
 	recipient.update(config["contacts"][contactname])
-	logger.debug("delivering entry %s to %s using %s" % (str(entry), contactname, providername))
+	logger.debug("delivering entry %s to %s using %s", str(entry), contactname, providername)
 	try:
 		providers[providername].send_message(recipient, message)
-	except pynotifyd.PyNotifyDPermanentError, err:
-		logger.error("delivery of %s to %s using %s failed with permanent error: %s" % (str(entry), contactname, providername, str(err)))
+	except errors.PyNotifyDPermanentError, err:
+		logger.error("delivery of %s to %s using %s failed with permanent error: %s", str(entry), contactname, providername, str(err))
 		queue.entry_next(entry, fast=True)
-	except pynotifyd.PyNotifyDTemporaryError, err:
-		logger.warn("delivery of %s to %s using %s failed with temporary error: %s" % (str(entry), contactname, providername, str(err)))
+	except errors.PyNotifyDTemporaryError, err:
+		logger.warn("delivery of %s to %s using %s failed with temporary error: %s", str(entry), contactname, providername, str(err))
 		queue.entry_next(entry)
 	except Exception, exc:
-		logger.error("delivery of %s to %s using %s failed with an unknown exception: %s  %s" % (str(entry), contactname, providername, exc.__class__.__name__, str(exc)))
+		logger.error("delivery of %s to %s using %s failed with an unknown exception: %s  %s", str(entry), contactname, providername, exc.__class__.__name__, str(exc))
 		queue.entry_next(entry)
 	else:
-		logger.debug("delivery of %s to %s using %s succeeded" % (str(entry), contactname, providername))
+		logger.debug("delivery of %s to %s using %s succeeded", str(entry), contactname, providername)
 		queue.entry_done(entry)
 	return 0

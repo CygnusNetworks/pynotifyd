@@ -21,9 +21,9 @@ else:
 	import logging
 	logging.setLoggerClass(logging.Logger)
 
-import pynotifyd
+import pynotifyd.errors
 import pynotifyd.queue
-import pynotifyd.providers.all
+import pynotifyd.providers.base
 import optparse
 
 HAS_SETPROCTITLE = False
@@ -161,7 +161,7 @@ def main():
 
 	try:
 		config = pynotifyd.read_config(options.configfile)
-	except pynotifyd.PyNotifyDError, err:
+	except pynotifyd.errors.PyNotifyDError, err:
 		die_exc(err)
 
 	if "chgid" in config["general"]:
@@ -191,10 +191,10 @@ def main():
 				else:
 					die("cannot use provider %s - check if dependencies are satisfied or remove provider from config. Error: %s" % (section["driver"], pynotifyd.providers.all.provider_errors[section["driver"]]))
 
-			except pynotifyd.PyNotifyDError, err:
+			except pynotifyd.errors.PyNotifyDError, err:
 				err.msg = err.msg + ("in provider %s" % name,)
 				raise err
-	except pynotifyd.PyNotifyDError, err:
+	except pynotifyd.errors.PyNotifyDError, err:
 		die_exc(err)
 
 	if config["general"].get("proctitle") and HAS_SETPROCTITLE:
@@ -206,7 +206,7 @@ def main():
 		queue.lock()
 		if options.clearqueue:
 			queue.clear()
-	except pynotifyd.PyNotifyDError, err:
+	except pynotifyd.errors.PyNotifyDError, err:
 		die_exc(err)
 
 	# startup finished: terminate parent

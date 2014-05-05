@@ -7,8 +7,8 @@ from .. import errors
 import base
 
 
-class ProviderSipgate(base.SMSProviderBase):
-	"""Send a sms using http://www.sipgate.de/ via xmlrpc.
+class ProviderSmstrade(base.SMSProviderBase):
+	"""Send a sms using http://www.smstrade.eu/
 
 	Required configuration options:
 		- username
@@ -24,10 +24,17 @@ class ProviderSipgate(base.SMSProviderBase):
 		@raises PyNotifyDConfigurationError:
 		"""
 		base.SMSProviderBase.__init__(self, config)
-		api = config.get("api", "basic").strip().lower()
-		if api not in ("basic", "plus", "team"):
-			raise errors.PyNotifyDConfigurationError("invalid value %s for api" % api)
-		self.sms = gsmsapi.sipgate_api.SipgateAPI(config.get("username"), config.get("password"), api)
+		api_key = config.get("key", None)
+		route = config.get("route", "basic")
+		sender = config.get("sender", None)
+		if api_key is None:
+			raise errors.PyNotifyDConfigurationError("No api key given")
+		if route not in ("basic", "gold", "direct"):
+			raise errors.PyNotifyDConfigurationError("invalid value %s for route" % route)
+		if sender is None:
+			raise errors.PyNotifyDConfigurationError("No sender given")
+
+		self.sms = gsmsapi.smstrade_api.SMSTradeAPI(api_key, sender, route)
 
 	def get_balance(self):
 		return self.sms.get_balance()
