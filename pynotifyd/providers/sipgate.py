@@ -25,9 +25,16 @@ class ProviderSipgate(base.SMSProviderBase):
 		"""
 		base.SMSProviderBase.__init__(self, config)
 		api = config.get("api", "basic").strip().lower()
+		username = config.get("username", None)
+		password = config.get("password", None)
 		if api not in ("basic", "plus", "team"):
 			raise errors.PyNotifyDConfigurationError("invalid value %s for api" % api)
-		self.sms = gsmsapi.sipgate_api.SipgateAPI(config.get("username"), config.get("password"), api)
+		if username is None:
+			raise errors.PyNotifyDConfigurationError("No username is given")
+		if username is None:
+			raise errors.PyNotifyDConfigurationError("No password is given")
+
+		self.sms = gsmsapi.sipgate_api.SipgateAPI(username, password, api)
 
 	def get_balance(self):
 		return self.sms.get_balance()
