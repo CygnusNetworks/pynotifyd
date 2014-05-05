@@ -21,9 +21,12 @@ else:
 	import logging
 	logging.setLoggerClass(logging.Logger)
 
+import pynotifyd.config
 import pynotifyd.errors
-import pynotifyd.queue
+import pynotifyd.notifier
+import pynotifyd.providers.all
 import pynotifyd.providers.base
+import pynotifyd.queue
 import optparse
 
 HAS_SETPROCTITLE = False
@@ -139,7 +142,7 @@ def syslog_handler(ident):
 
 
 def main():
-	config = directory_watcher = queue = None
+	config = directory_watcher = queue = providers = old_stderr = None
 
 	def_config = "/etc/pynotifyd.conf"
 	parser = optparse.OptionParser(usage="Usage: %prog [options]")
@@ -160,7 +163,7 @@ def main():
 		die("unrecognized non-option parameters were passed")
 
 	try:
-		config = pynotifyd.read_config(options.configfile)
+		config = pynotifyd.config.read_config(options.configfile)
 	except pynotifyd.errors.PyNotifyDError, err:
 		die_exc(err)
 
@@ -170,9 +173,9 @@ def main():
 		chuid(config["general"]["chuid"])
 
 	if config["general"]["notify"] == "inotify":
-		directory_watcher = pynotifyd.InotifyDirectoryWatcher
+		directory_watcher = pynotifyd.notifier.InotifyDirectoryWatcher
 	elif config["general"]["notify"] == "signal":
-		directory_watcher = pynotifyd.SignalDirectoryWatcher
+		directory_watcher = pynotifyd.notifier.SignalDirectoryWatcher
 	else:
 		die("unknown notify method %r" % config["general"]["notify"])
 
@@ -217,7 +220,7 @@ def main():
 	try:
 		running = [True]
 
-		def terminate(signum, frame):
+		def terminate(_, __):
 			running[0] = False
 
 		signal.signal(signal.SIGTERM, terminate)
@@ -229,23 +232,23 @@ def main():
 			if wait is None:
 				logger.debug("queue empty, sleeping ")
 			else:
-				logger.debug("sleeping up to %.1f seconds" % wait)
+				logger.debug("sleeping up to %.1f seconds", wait)
 			directory_watcher_handle(wait)
 		logger.debug("terminating due to SIGTERM")
 	finally:
 		for name, provider in providers.items():
-			logger.debug("terminating provider %s" % name)
+			logger.debug("terminating provider %s", name)
 			try:
 				provider.terminate()
 			except Exception, msg:
-				logger.error("failed to terminate provider %s with %s: %s" % (name, msg.__class__.__name__, msg))
+				logger.error("failed to terminate provider %s with %s: %s", name, msg.__class__.__name__, msg)
 		queue.unlock()
 
 if __name__ == '__main__':
 	try:
 		main()
 	except Exception, exc:
-		logger.error("pynotifyd crashed with message %s and exception %s" % (str(exc), exc.__class__.__name__))
+		logger.error("pynotifyd crashed with message %s and exception %s", str(exc), exc.__class__.__name__)
 		for line in traceback.format_exc(sys.exc_info()[2]).splitlines():
 			logger.error(line)
 		raise
