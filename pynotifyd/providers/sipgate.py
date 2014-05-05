@@ -1,7 +1,7 @@
 #!/usr/bin/env python
 # -*- coding: utf-8 -*-
 
-import gsmsapi
+import gsmsapi.sipgate_api
 
 from .. import errors
 import base
