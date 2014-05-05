@@ -98,7 +98,7 @@ class ProviderJabber(pynotifyd.providers.ProviderBase, object):
 		self.password = config["password"]
 		self.timeout = int(config["timeout"])
 
-	def sendmessage(self, recipient, message):
+	def send_message(self, recipient, message):
 		jid, exclude_resources, include_states = pynotifyd.providers.jabbercommon.validate_recipient(recipient)
 		client = SendJabberClient(self.jid, self.password, jid, message, exclude_resources.__contains__, include_states.__contains__)
 		client.connect()

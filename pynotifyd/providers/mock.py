@@ -27,7 +27,7 @@ class ProviderMock(pynotifyd.providers.ProviderBase):
 		if self.failtype not in (None, "permanent", "temporary", "random", "success"):
 			raise pynotifyd.PyNotifyDConfigurationError("failtype must be one out of: permanent, temporary, random or success")
 
-	def sendmessage(self, recipient, message):
+	def send_message(self, recipient, message):
 		if self.failtype == "permanent":
 			raise pynotifyd.PyNotifyDPermanentError("mocking permanent error")
 		time.sleep(self.duration)

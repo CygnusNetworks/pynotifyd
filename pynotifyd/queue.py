@@ -255,7 +255,7 @@ def process_queue_step(config, queue, providers):
 	recipient.update(config["contacts"][contactname])
 	logger.debug("delivering entry %s to %s using %s" % (str(entry), contactname, providername))
 	try:
-		providers[providername].sendmessage(recipient, message)
+		providers[providername].send_message(recipient, message)
 	except pynotifyd.PyNotifyDPermanentError, err:
 		logger.error("delivery of %s to %s using %s failed with permanent error: %s" % (str(entry), contactname, providername, str(err)))
 		queue.entry_next(entry, fast=True)

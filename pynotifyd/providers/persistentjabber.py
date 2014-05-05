@@ -436,7 +436,7 @@ class ProviderPersistentJabber(pynotifyd.providers.ProviderBase):
 		self.client_thread = PersistentJabberClient(myjid, config["password"])
 		self.client_thread.start()
 
-	def sendmessage(self, recipient, message):
+	def send_message(self, recipient, message):
 		jid, exclude_resources, include_states = pynotifyd.providers.jabbercommon.validate_recipient(recipient)
 		# The following raises a number of pynotifyd exceptions.
 		self.client_thread.send_message(jid, message, exclude_resources.__contains__, include_states.__contains__)

@@ -5,7 +5,7 @@ import pynotifyd
 
 
 class ProviderBase(object):
-	def sendmessage(self, recipient, message):
+	def send_message(self, recipient, message):
 		"""This virtual function is to be overridden by provider
 		implementations.
 
@@ -43,7 +43,7 @@ class SMSProviderBase(ProviderBase):
 		except ValueError:
 			raise pynotifyd.PyNotifyDConfigurationError("maxsmslength config option  requires an integer parameter")
 
-	def sendsms(self, phone, message):
+	def send_sms(self, phone, message):
 		"""This virtual function is to be overridden by sms proivder
 		implementations.
 
@@ -53,10 +53,10 @@ class SMSProviderBase(ProviderBase):
 		"""
 		raise NotImplementedError
 
-	def sendmessage(self, recipient, message):
+	def send_message(self, recipient, message):
 		try:
 			phone = recipient["phone"]
 		except KeyError:
 			raise pynotifyd.PyNotifyDConfigurationError("missing phone on contact")
 		message = message[:self.maxsmslength]
-		self.sendsms(phone, message)
+		self.send_sms(phone, message)

@@ -32,7 +32,7 @@ class ProviderMail(pynotifyd.providers.ProviderBase):
 			raise pynotifyd.PyNotifyDConfigurationError("from address required")
 		self.forceto = config.get("forceto")
 
-	def sendmessage(self, recipient, message):
+	def send_message(self, recipient, message):
 		if self.forceto is None:
 			try:
 				mailto = recipient["email"]

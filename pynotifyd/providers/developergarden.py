@@ -286,6 +286,6 @@ class ProviderDevelopergarden(pynotifyd.providers.SMSProviderBase):
 		return [result for result in results.values()
 				if len(result.keys()) == 2]
 
-	def sendsms(self, phone, message):
+	def send_sms(self, phone, message):
 		token = self.get_token()
 		self.initiate_send(token, phone, message)

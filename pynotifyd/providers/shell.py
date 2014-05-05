@@ -31,7 +31,7 @@ class ProviderShell(pynotifyd.providers.ProviderBase):
 		message_on_stdin = config.get("message_on_stdin", "no").strip().lower()
 		self.message_on_stdin = message_on_stdin not in ('no', 'false', '0')
 
-	def sendmessage(self, contact, message):
+	def send_message(self, contact, message):
 		"""
 		@type contact: dict
 		@type message: str
