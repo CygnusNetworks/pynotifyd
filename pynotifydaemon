@@ -13,10 +13,11 @@ import sys
 import traceback
 
 # The following snippet has to occur before anyone uses the logging module.
+HAS_INOTIFY = True
 try:
 	import pyinotify
 except ImportError:
-	pass
+	HAS_INOTIFY = False
 else:
 	# Now pyinoty has called its log_init and fucked the GLOBAL LOGGER CLASS.
 	import logging
@@ -175,7 +176,9 @@ def main():
 	if "chuid" in config["general"]:
 		chuid(config["general"]["chuid"])
 
-	if config["general"]["notify"] == "inotify":
+	if config["general"]["notify"] == "inotify" and HAS_INOTIFY is False:
+		die("inotify specified in [general][notify] but inotify is missing. Install inotify python module or change config")
+	elif config["general"]["notify"] == "inotify":
 		directory_watcher = pynotifyd.notifier.InotifyDirectoryWatcher
 	elif config["general"]["notify"] == "signal":
 		directory_watcher = pynotifyd.notifier.SignalDirectoryWatcher
