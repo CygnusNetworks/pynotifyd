@@ -201,7 +201,7 @@ def main():
 				for name, obj in inspect.getmembers(sys.modules["pynotifyd.providers.%s" % package_name]):
 					if inspect.isclass(obj) and name.startswith("Provider"):
 						logger.debug("Found class %s in module %s for provider name %s" % (name, package_name, p_name))
- 						providers[p_name] = obj
+ 						providers[p_name] = obj(section)
 			except (ImportError, Exception) as msg:
 				for line in traceback.format_exc(sys.exc_info()[2]).splitlines():
 					logger.warn(line)
