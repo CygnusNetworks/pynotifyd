@@ -2,8 +2,16 @@
 # -*- coding: utf-8 -*-
 
 import configobj
-import validate
+import email.utils
 import socket
+import validate
+
+HAS_PHONENUMBERS=False
+try:
+	import phonenumbers
+	HAS_PHONENUMBERS=True
+except ImportError:
+	pass
 
 import errors
 
@@ -35,19 +43,27 @@ def validate_contact(contact):
 	@type contact: {str: str}
 	@raises PyNotifyDConfigurationError:
 	"""
+	# Basic constraint checking on phone number, if phonenumbers is not used
 	for number in get_the_item(contact, "number"):
-		if not number.startswith("+"):
-			raise errors.PyNotifyDConfigurationError("phone number must start with a plus sign")
-		if not number[1:].isdigit():
-			raise errors.PyNotifyDConfigurationError("non-digits found in phone number")
+		if not HAS_PHONENUMBERS:
+			if not number.startswith("+"):
+				raise errors.PyNotifyDConfigurationError("phone number must start with a plus sign")
+			if not number[1:].isdigit():
+				raise errors.PyNotifyDConfigurationError("non-digits found in phone number")
+		else:
+			try:
+				# TODO: add region support
+				parsed = phonenumbers.parse(number, None)
+			except Exception, msg:
+				raise errors.PyNotifyDConfigurationError("phonenumber cannot be parsed with exception %s" % msg)
 
 	for jabber in get_the_item(contact, "jabber"):
 		if '@' not in jabber:
 			raise errors.PyNotifyDConfigurationError("a jabberid has to contain an @ sign")
 
-	for email in get_the_item(contact, "email"):
-		if '@' not in email:
-			raise errors.PyNotifyDConfigurationError("an email address has to contain an @ sign")
+	for addr in get_the_item(contact, "email"):
+		if len(email.utils.parseaddr(addr)[1])==0:
+			raise errors.PyNotifyDConfigurationError("email address %s is invalid in contact %s" % (addr, contact))
 
 
 def read_config(filename):
