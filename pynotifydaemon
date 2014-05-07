@@ -246,6 +246,8 @@ def main():
 				logger.debug("sleeping up to %.1f seconds", wait)
 			directory_watcher_handle(wait)
 		logger.debug("terminating due to SIGTERM")
+	except KeyboardInterrupt:
+		logger.debug("pynotifyd stopping due to keyboard interrupt")
 	finally:
 		for name, provider in providers.items():
 			logger.debug("terminating provider %s", name)
