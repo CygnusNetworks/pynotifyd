@@ -3,8 +3,10 @@
 
 from setuptools import setup
 
+from pynotifyd import __version__
+
 setup(name='pynotifyd',
-	version='0.90',
+	version=__version__,
 	description="Python Notification Daemon",
 	long_description="The daemon allows you to send a message to a contact via jabber, email or sms whatever fits best. It is intended for use with Nagios.",
 	author='Helmut Grohne',

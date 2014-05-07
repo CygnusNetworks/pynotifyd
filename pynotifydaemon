@@ -22,6 +22,7 @@ else:
 	import logging
 	logging.setLoggerClass(logging.Logger)
 
+import pynotifyd
 import pynotifyd.config
 import pynotifyd.errors
 import pynotifyd.notifier
@@ -161,6 +162,8 @@ def main():
 
 	if args:
 		die("unrecognized non-option parameters were passed")
+
+	logger.debug("pynotifyd %s starting using config file %s" % (pynotifyd.__version__, options.configfile))
 
 	try:
 		config = pynotifyd.config.read_config(options.configfile)
