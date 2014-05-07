@@ -15,6 +15,8 @@ import processlock
 logger = logging.getLogger("pynotifyd.queue")
 
 
+QUEUE_PREFIX = "pynotifyd-"
+
 def generate_unique_id():
 	"""Generate a unique identifier.
 	@rtype: str
@@ -28,20 +30,19 @@ generate_unique_id.counter = 0
 
 
 class QueueEntry(object):
-	QUEUE_PREFIX = "pynotifyd-"
 	def __init__(self, filename_or_parts):
 		"""
 		@type filename_or_parts: str or list
 		"""
 		if isinstance(filename_or_parts, list):
-			self.filename = self.QUEUE_PREFIX + ".".join(filename_or_parts)
+			self.filename = QUEUE_PREFIX + ".".join(filename_or_parts)
 			self.parts = filename_or_parts
 		else:
-			if filename_or_parts.startswith(self.QUEUE_PREFIX):
+			if filename_or_parts.startswith(QUEUE_PREFIX):
 				self.filename = filename_or_parts
-				self.parts = filename_or_parts[len(self.QUEUE_PREFIX):].split(".")
+				self.parts = filename_or_parts[len(QUEUE_PREFIX):].split(".")
 			else:
-				self.filename = self.QUEUE_PREFIX + filename_or_parts
+				self.filename = QUEUE_PREFIX + filename_or_parts
 				self.parts = filename_or_parts.split(".")
 		assert len(self.parts) >= 3
 
@@ -150,9 +151,9 @@ class PersistentQueue(object):
 		@rtype: gen([QueueEntry])
 		"""
 		for entry in os.listdir(self.queuedir):
-			logger.debug("Found entry %s in queuedir %s", entry, self.queuedir)
-			if not entry.startswith(".") and entry.startswith("pynotifyd-"):
-				logger.debug("Entry %s is a pynotifyd queue entry", entry)
+			logger.debug("Found file named %s in queuedir %s", entry, self.queuedir)
+			if entry.startswith(QUEUE_PREFIX):
+				logger.debug("File %s is a pynotifyd queue entry", entry)
 				entry = QueueEntry(entry)
 				if not entry.istemporary:
 					yield entry
@@ -258,13 +259,16 @@ def process_queue_step(config, queue, providers):
 	if sleep_time > 0:
 		return sleep_time
 	providername = queue.get_state(entry)
+
 	if providername == "GIVEUP":
 		logger.debug("giving up on entry %s", str(entry))
 		queue.entry_done(entry)
 		return 0
+
 	contactname, message = queue.get_contents(entry)
 	recipient = dict(name=contactname)
 	recipient.update(config["contacts"][contactname])
+
 	logger.debug("delivering entry %s to %s using %s", str(entry), contactname, providername)
 	try:
 		providers[providername].send_message(recipient, message)
