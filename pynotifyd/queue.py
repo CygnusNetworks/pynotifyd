@@ -6,6 +6,8 @@ import logging
 import random
 import time
 import os
+import sys
+import traceback
 
 import errors
 import processlock
@@ -264,6 +266,8 @@ def process_queue_step(config, queue, providers):
 		logger.warn("delivery of %s to %s using %s failed with temporary error: %s", str(entry), contactname, providername, str(err))
 		queue.entry_next(entry)
 	except Exception, exc:
+		for line in traceback.format_exc(sys.exc_info()[2]).splitlines():
+			logger.warn(line)
 		logger.error("delivery of %s to %s using %s failed with an unknown exception: %s  %s", str(entry), contactname, providername, exc.__class__.__name__, str(exc))
 		queue.entry_next(entry)
 	else:
