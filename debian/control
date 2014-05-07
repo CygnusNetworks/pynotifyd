@@ -1,6 +1,5 @@
 Source: pynotifyd
-Maintainer: Torge Szczepanek <info@cygnusnetworks.de>
-Uploaders: Helmut Grohne <h.grohne@cygnusnetworks.de>
+Maintainer: Torge Szczepanek <debian@cygnusnetworks.de>
 Standards-Version: 3.8.0
 Section: python
 Priority: extra

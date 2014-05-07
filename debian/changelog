@@ -1,8 +1,11 @@
 pynotifyd (0.90) UNRELEASED; urgency=low
 
-  * TODO.
+  * Switch to use python-gsmsapi and include SMStrade
+  * Change handling of imports of providers
+  * change queue filenames to include prefix
+  * PEP8 and pylint fixes
 
- -- Torge Szczepanek <info@cygnusnetworks.de>  Wed, 26 Mar 2014 20:19:52 +0100
+ -- Torge Szczepanek <debian@cygnusnetworks.de>  Wed, 07 May 2014 17:09:16 +0200
 
 pynotifyd (0.89) stable; urgency=low
 
