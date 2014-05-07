@@ -19,8 +19,9 @@ def generate_unique_id():
 	"""
 	# These ids do not collide if a pid rollover takes at least one second.
 	tokens = dict(P=os.getpid(), T=time.time(), C=generate_unique_id.counter, R=random.randrange(1 << 32))
+	print "DEBUG tokens are", tokens
 	generate_unique_id.counter += 1
-	return "".join(["%s%x" % (key, value) for key, value in tokens])
+	return "".join(["%s%x" % (key, value) for key, value in tokens.iteritems()])
 generate_unique_id.counter = 0
 
 
