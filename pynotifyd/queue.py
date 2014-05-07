@@ -239,7 +239,7 @@ class PersistentQueue(object):
 		"""Removes all entries from the queue without processing them."""
 		logger.debug("queue.clear called")
 		for entry in self.iter_entries():
-			logger.debug("queue.clear processing entry %s" % entry)
+			logger.debug("queue.clear processing entry %s", entry)
 			self.entry_done(entry)
 
 

@@ -53,7 +53,7 @@ def validate_contact(contact):
 		else:
 			try:
 				# TODO: add region support
-				parsed = phonenumbers.parse(number, None)
+				_ = phonenumbers.parse(number, None)
 			except Exception, msg:
 				raise errors.PyNotifyDConfigurationError("phonenumber cannot be parsed with exception %s" % msg)
 

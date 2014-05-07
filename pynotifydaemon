@@ -206,7 +206,7 @@ def main():
 				except (ImportError, Exception) as msg:
 					for line in traceback.format_exc(sys.exc_info()[2]).splitlines():
 						logger.warn(line)
-					provider_errors.append("cannot use provider %s - check if dependencies are satisfied or remove provider from config. Error: %s" % (name, msg))
+					provider_errors.append("cannot use provider %s - check if dependencies are satisfied or remove provider from config. Error: %s" % (p_name, msg))
 			else:
 				logger.debug("Ignoring unused provider %s which is not used in [general][retry] logic" % p_name)
 	except pynotifyd.errors.PyNotifyDError, err:
