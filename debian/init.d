@@ -46,7 +46,7 @@ test -f "$PYNOTIFYD_CONFIG" || exit 0
 
 get_queuedir()
 {
-	python -c 'print(__import__("pynotifyd").read_config("/etc/pynotifyd.conf")["general"]["queuedir"])'
+	$DAEMON --queuedir-print
 }
 
 do_status()
