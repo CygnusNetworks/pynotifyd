@@ -42,4 +42,4 @@ class ProviderSipgate(base.SMSProviderBase):
 	def send_sms(self, phone, message):
 		assert phone.startswith('+')
 		# TODO: preprocess phone and message
-		self.send_sms(phone[1:], message)
+		self.sms.send_sms(phone, message)
