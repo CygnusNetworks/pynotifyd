@@ -24,7 +24,6 @@ else:
 import pynotifyd.config
 import pynotifyd.errors
 import pynotifyd.notifier
-import pynotifyd.providers.all
 import pynotifyd.providers.base
 import pynotifyd.queue
 import optparse
@@ -187,18 +186,20 @@ def main():
 		queue = pynotifyd.queue.PersistentQueue(config["general"]["queuedir"], config["general"]["retry"])
 
 		providers = {}
+		provider_errors = []
 		for name, section in config["providers"].items():
 			try:
-				if section["driver"] in pynotifyd.providers.all.provider_drivers:
-					providers[name] = pynotifyd.providers.all.provider_drivers[section["driver"]](section)
-				else:
-					die("cannot use provider %s - check if dependencies are satisfied or remove provider from config. Error: %s" % (section["driver"], pynotifyd.providers.all.provider_errors[section["driver"]]))
-
-			except pynotifyd.errors.PyNotifyDError, err:
-				err.msg = err.msg + ("in provider %s" % name,)
-				raise err
+				package_name = section["driver"]
+				mod_l = __import__("pynotifyd.providers.%s" % package_name, fromlist=[])
+				providers[name] = mod_l
+			except (ImportError, Exception) as msg:
+				for line in traceback.format_exc(sys.exc_info()[2]).splitlines():
+					logger.warn(line)
+				provider_errors.append("cannot use provider %s - check if dependencies are satisfied or remove provider from config. Error: %s" % (name, msg))
 	except pynotifyd.errors.PyNotifyDError, err:
 		die_exc(err)
+	if len(provider_errors)>0:
+		die("\n".join(provider_errors))
 
 	if config["general"].get("proctitle") and HAS_SETPROCTITLE:
 		setproctitle.setproctitle(config["general"]["proctitle"])
