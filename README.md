@@ -65,3 +65,4 @@ define contact{
 ```
 
 
+[![Build Status](https://travis-ci.org/CygnusNetworks/pynotifyd.svg?branch=master)](https://travis-ci.org/CygnusNetworks/pynotifyd)
