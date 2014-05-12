@@ -1,11 +1,11 @@
-pynotifyd (0.90) UNRELEASED; urgency=low
+pynotifyd (0.90) wheezy; urgency=low
 
   * Switch to use python-gsmsapi and include SMStrade
   * Change handling of imports of providers
   * change queue filenames to include prefix
   * PEP8 and pylint fixes
 
- -- Torge Szczepanek <debian@cygnusnetworks.de>  Wed, 07 May 2014 17:09:16 +0200
+ -- Torge Szczepanek <debian@cygnusnetworks.de>  Mon, 12 May 2014 11:38:34 +0200
 
 pynotifyd (0.89) stable; urgency=low
 
