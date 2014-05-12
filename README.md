@@ -1,8 +1,11 @@
+[![Build Status](https://travis-ci.org/CygnusNetworks/pynotifyd.svg?branch=master)](https://travis-ci.org/CygnusNetworks/pynotifyd)
+
 #pynotifyd
 
 Notification Daemon for Notifications through various plugins (common plugins are Jabber/XMPP instant messaging and Mobile Short Messages (SMS) providers using a Web API).
 
 Pynotifyd is providing a solution for sending Notifications to users 
+
 by Instant Messaging (Jabber/XMPP) and depending on their Online Status to mobile phone numbers by short message, if the user is offline or the Online status (for example away) is not matching a defined criteria. Plugins exist for Jabber/XMPP and some SMS providers (Sipgate, T-Mobile Developergarden). Other handlers can be easily added by implementing a plugin or calling a shell command.
 
 ##Introduction
@@ -63,5 +66,6 @@ define contact{
         pager                           username  # this is the named defined in contacts section of pynotifyd.conf 
         }
 ```
+
 
 
