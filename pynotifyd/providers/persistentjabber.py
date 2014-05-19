@@ -153,7 +153,7 @@ class PersistentJabberClient(jabbercommon.BaseJabberClient, threading.Thread):  
 	@type terminating: bool
 	@ivar terminating: whether the client is about to shut down
 	"""
-	def __init__(self, jid, password, ping_max_age=0, ping_timeout=10, reconnect_timeout=60):  # pylint:disable=R0913
+	def __init__(self, jid, password, tls_require=True, tls_verify_peer=False, cacert_file=None, ping_max_age=0, ping_timeout=10, reconnect_timeout=60):  # pylint:disable=R0913
 		"""
 		@type jid: pyxmpp.jid.JID
 		@type password: str
@@ -433,6 +433,7 @@ class ProviderPersistentJabber(base.ProviderBase):
 		myjid = pyxmpp.jid.JID(config["jid"])
 		if myjid.node is None or myjid.resource is None:  # pylint: disable=E1101
 			raise errors.PyNotifyDConfigurationError("jid must be of the form node@domain/resource")
+
 		self.client_thread = PersistentJabberClient(myjid, config["password"])
 		self.client_thread.start()
 

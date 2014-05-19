@@ -11,9 +11,10 @@ from .. import errors
 
 
 class BaseJabberClient(pyxmpp.jabber.client.JabberClient, pyxmpp.streamtls.StreamTLSMixIn, object):  # pylint:disable=R0904
-	def __init__(self, jid, password):
-		# FIME: make configurable
-		tls = pyxmpp.streamtls.TLSSettings(require=True, verify_peer=False)
+	def __init__(self, jid, password, tls_require=True, tls_verify_peer=False, cacert_file=None):
+		if tls_verify_peer is True:
+			assert cacert_file is not None
+		tls = pyxmpp.streamtls.TLSSettings(require=tls_require, verify_peer=tls_verify_peer, cacert_file=cacert_file)
 		pyxmpp.jabber.client.JabberClient.__init__(self, jid, password, tls_settings=tls)
 
 	### Section: own hooks
@@ -50,7 +51,6 @@ class BaseJabberClient(pyxmpp.jabber.client.JabberClient, pyxmpp.streamtls.Strea
 		self.handle_session_started()
 		self.request_roster()
 		self.stream.send(pyxmpp.presence.Presence())
-
 
 def make_set(value):
 	if isinstance(value, list):

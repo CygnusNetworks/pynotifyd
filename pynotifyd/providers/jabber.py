@@ -15,7 +15,7 @@ from .. import errors
 
 
 class SendJabberClient(jabbercommon.BaseJabberClient, object):  # pylint:disable=R0904
-	def __init__(self, jid, password, target, message, exclude_resources, include_states):  # pylint:disable=R0913
+	def __init__(self, jid, password, target, message, exclude_resources, include_states, tls_require=True, tls_verify_peer=False, cacert_file=None):  # pylint:disable=R0913
 		"""
 		@type jid: pyxmpp.jid.JID
 		@type password: str
@@ -24,7 +24,7 @@ class SendJabberClient(jabbercommon.BaseJabberClient, object):  # pylint:disable
 		@type exclude_resources: str -> bool
 		@type include_states: str -> bool
 		"""
-		jabbercommon.BaseJabberClient.__init__(self, jid, password)
+		jabbercommon.BaseJabberClient.__init__(self, jid, password, tls_require=tls_require, tls_verify_peer=tls_verify_peer, cacert_file=cacert_file)
 		self.target = target
 		self.message = pyxmpp.message.Message(to_jid=self.target, body=message)
 		self.exclude_resources = exclude_resources
