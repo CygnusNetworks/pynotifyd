@@ -165,6 +165,7 @@ class PersistentJabberClient(jabbercommon.BaseJabberClient, threading.Thread):  
 		self.ping_timeout = ping_timeout
 		self.reconnect_timeout = reconnect_timeout
 		self.reconnect_trigger_read, self.reconnect_trigger_write = os.pipe()
+		self.reconnect_attempt = 0
 		self.last_reconnect = 0
 		self.client_lock = threading.Lock()
 		self.connection_usable = threading.Condition(self.client_lock)
@@ -275,7 +276,6 @@ class PersistentJabberClient(jabbercommon.BaseJabberClient, threading.Thread):  
 		"""must not be called outside of run"""
 		logger.debug("Starting reconnect loop.")
 		assert not self.connection_is_usable
-		attempt = 0
 		while True:
 			logger.debug("Clearing data structures before reconnect.")
 			self.contacts.clear()
@@ -287,13 +287,13 @@ class PersistentJabberClient(jabbercommon.BaseJabberClient, threading.Thread):  
 					self.stream.close()
 				except pyxmpp.exceptions.FatalStreamError as exc:
 					logger.debug("Failed to close stream with %s. Proceed anyway.", exc)
-			wait_time = 10*1.4**attempt
+			wait_time = 10*1.4**self.reconnect_attempt
 			if wait_time > self.MAX_WAITTIME:
 				wait_time = self.MAX_WAITTIME
 			logger.debug("Waiting before trying next reconnect for %s seconds" % wait_time)
 			time.sleep(wait_time)
-			attempt += 1
-			logger.debug("Attempting to connect to jabber server in try %s." % attempt)
+			self.reconnect_attempt += 1
+			logger.debug("Attempting to connect to jabber server in try %s." % self.reconnect_attempt)
 			try:
 				self.connect()
 			except pyxmpp.exceptions.FatalStreamError as exc:
@@ -304,6 +304,7 @@ class PersistentJabberClient(jabbercommon.BaseJabberClient, threading.Thread):  
 				continue  # try again
 			else:
 				logger.debug("Jabber connect completed successfully.")
+				self.reconnect_attempt = 0
 				return
 
 	def run(self):
