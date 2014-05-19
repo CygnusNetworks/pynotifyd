@@ -153,8 +153,8 @@ class PersistentJabberClient(jabbercommon.BaseJabberClient, threading.Thread):  
 	@type terminating: bool
 	@ivar terminating: whether the client is about to shut down
 	"""
-	MAX_WAITTIME = 1200
-	def __init__(self, jid, password, tls_require=True, tls_verify_peer=False, cacert_file=None, ping_max_age=0, ping_timeout=10, reconnect_timeout=self.MAX_WAITTIME*10):  # pylint:disable=R0913
+	MAX_RECONNECT_WAITTIME = 120
+	def __init__(self, jid, password, tls_require=True, tls_verify_peer=False, cacert_file=None, ping_max_age=0, ping_timeout=10, reconnect_timeout=600):  # pylint:disable=R0913
 		"""
 		@type jid: pyxmpp.jid.JID
 		@type password: str
@@ -287,13 +287,17 @@ class PersistentJabberClient(jabbercommon.BaseJabberClient, threading.Thread):  
 					self.stream.close()
 				except pyxmpp.exceptions.FatalStreamError as exc:
 					logger.debug("Failed to close stream with %s. Proceed anyway.", exc)
-			wait_time = 10*1.4**self.reconnect_attempt
-			if wait_time > self.MAX_WAITTIME:
-				wait_time = self.MAX_WAITTIME
-			logger.debug("Waiting before trying next reconnect for %s seconds" % wait_time)
-			time.sleep(wait_time)
 			self.reconnect_attempt += 1
-			logger.debug("Attempting to connect to jabber server in try %s." % self.reconnect_attempt)
+			wait_time = 10*self.reconnect_attempt
+			if wait_time > self.MAX_RECONNECT_WAITTIME:
+				wait_time = self.MAX_RECONNECT_WAITTIME
+			logger.debug("Waiting before trying next reconnect for %s seconds" % wait_time)
+			for i in range(0, wait_time+1):
+				time.sleep(1)
+				if self.terminating:
+					logger.debug("Received terminating event during reconnect. Stopping reconnect")
+					return
+			logger.debug("Attempting to connect to jabber server in try %s" % self.reconnect_attempt)
 			try:
 				self.connect()
 			except pyxmpp.exceptions.FatalStreamError as exc:
