@@ -354,6 +354,8 @@ class PersistentJabberClient(jabbercommon.BaseJabberClient, threading.Thread):  
 							logger.warning("processing of xmpp stream failed with %r", err, exc_info=True)
 							self.connection_is_usable = False
 							self.do_reconnect()
+							if self.terminating:
+								break
 					else:
 						logger.debug("jabber thread doing xmpp housekeeping")
 						stream.idle()
@@ -364,6 +366,8 @@ class PersistentJabberClient(jabbercommon.BaseJabberClient, threading.Thread):  
 					logger.info("no client stream found. reconnecting")
 					self.connection_is_usable = False
 					self.do_reconnect()
+					if self.terminating:
+						break
 		except Exception as exc:
 			logger.warning("jabber thread terminated with exception %r", exc, exc_info=True)
 			raise
