@@ -153,6 +153,7 @@ class PersistentJabberClient(jabbercommon.BaseJabberClient, threading.Thread):  
 	@type terminating: bool
 	@ivar terminating: whether the client is about to shut down
 	"""
+	MAX_WAITTIME = 1200
 	def __init__(self, jid, password, tls_require=True, tls_verify_peer=False, cacert_file=None, ping_max_age=0, ping_timeout=10, reconnect_timeout=60):  # pylint:disable=R0913
 		"""
 		@type jid: pyxmpp.jid.JID
@@ -274,6 +275,7 @@ class PersistentJabberClient(jabbercommon.BaseJabberClient, threading.Thread):  
 		"""must not be called outside of run"""
 		logger.debug("Starting reconnect loop.")
 		assert not self.connection_is_usable
+		attempt = 0
 		while True:
 			logger.debug("Clearing data structures before reconnect.")
 			self.contacts.clear()
@@ -285,7 +287,13 @@ class PersistentJabberClient(jabbercommon.BaseJabberClient, threading.Thread):  
 					self.stream.close()
 				except pyxmpp.exceptions.FatalStreamError as exc:
 					logger.debug("Failed to close stream with %s. Proceed anyway.", exc)
-			logger.debug("Attempting to connect to jabber server.")
+			wait_time = 10*1.4**attempt
+			if wait_time > self.MAX_WAITTIME:
+				wait_time = self.MAX_WAITTIME
+			logger.debug("Waiting before trying next reconnect for %s seconds" % wait_time)
+			time.sleep(wait_time)
+			attempt += 1
+			logger.debug("Attempting to connect to jabber server in try %s." % attempt)
 			try:
 				self.connect()
 			except pyxmpp.exceptions.FatalStreamError as exc:
