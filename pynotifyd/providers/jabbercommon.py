@@ -5,11 +5,12 @@ import pyxmpp.exceptions
 import pyxmpp.jabber.client
 import pyxmpp.jid
 import pyxmpp.presence
+import pyxmpp.streamtls
 
 from .. import errors
 
 
-class BaseJabberClient(pyxmpp.jabber.client.JabberClient, object):  # pylint:disable=R0904
+class BaseJabberClient(pyxmpp.jabber.client.JabberClient, pyxmpp.streamtls.StreamTLSMixIn, object):  # pylint:disable=R0904
 	def __init__(self, jid, password):
 		pyxmpp.jabber.client.JabberClient.__init__(self, jid, password)
 
