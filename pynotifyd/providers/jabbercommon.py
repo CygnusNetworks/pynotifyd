@@ -12,7 +12,9 @@ from .. import errors
 
 class BaseJabberClient(pyxmpp.jabber.client.JabberClient, pyxmpp.streamtls.StreamTLSMixIn, object):  # pylint:disable=R0904
 	def __init__(self, jid, password):
-		pyxmpp.jabber.client.JabberClient.__init__(self, jid, password)
+		# FIME: make configurable
+		tls = pyxmpp.streamtls.TLSSettings(require=True, verify_peer=False)
+		pyxmpp.jabber.client.JabberClient.__init__(self, jid, password, tls_settings=tls)
 
 	### Section: own hooks
 	def handle_session_started(self):
