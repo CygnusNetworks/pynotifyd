@@ -154,7 +154,7 @@ class PersistentJabberClient(jabbercommon.BaseJabberClient, threading.Thread):  
 	@ivar terminating: whether the client is about to shut down
 	"""
 	MAX_WAITTIME = 1200
-	def __init__(self, jid, password, tls_require=True, tls_verify_peer=False, cacert_file=None, ping_max_age=0, ping_timeout=10, reconnect_timeout=60):  # pylint:disable=R0913
+	def __init__(self, jid, password, tls_require=True, tls_verify_peer=False, cacert_file=None, ping_max_age=0, ping_timeout=10, reconnect_timeout=self.MAX_WAITTIME*10):  # pylint:disable=R0913
 		"""
 		@type jid: pyxmpp.jid.JID
 		@type password: str
@@ -303,8 +303,7 @@ class PersistentJabberClient(jabbercommon.BaseJabberClient, threading.Thread):  
 				logger.info("Connect failed with socket error %s", exc)
 				continue  # try again
 			else:
-				logger.debug("Jabber connect completed successfully.")
-				self.reconnect_attempt = 0
+				logger.debug("created jabber connection to jabber server - continuing with processing events")
 				return
 
 	def run(self):
@@ -342,6 +341,7 @@ class PersistentJabberClient(jabbercommon.BaseJabberClient, threading.Thread):  
 						logger.debug("jabber thread processing connection event")
 						try:
 							stream.process()
+							self.reconnect_attempt = 0
 						except pyxmpp.exceptions.StreamAuthenticationError:
 							logger.error("failed to authenticate to jabber server. terminating", exc_info=True)
 							self.terminating = True
