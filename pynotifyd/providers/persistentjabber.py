@@ -159,7 +159,7 @@ class PersistentJabberClient(jabbercommon.BaseJabberClient, threading.Thread):  
 		@type jid: pyxmpp.jid.JID
 		@type password: str
 		"""
-		jabbercommon.BaseJabberClient.__init__(self, jid, password)
+		jabbercommon.BaseJabberClient.__init__(self, jid, password, tls_require=True, tls_verify_peer=False, cacert_file=None)
 		threading.Thread.__init__(self)
 		self.ping_max_age = ping_max_age
 		self.ping_timeout = ping_timeout
