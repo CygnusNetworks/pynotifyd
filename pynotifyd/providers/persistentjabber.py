@@ -4,6 +4,7 @@
 from __future__ import with_statement
 import logging
 import os
+import random
 import select
 import socket
 import threading
@@ -288,7 +289,7 @@ class PersistentJabberClient(jabbercommon.BaseJabberClient, threading.Thread):  
 				except pyxmpp.exceptions.FatalStreamError as exc:
 					logger.debug("Failed to close stream with %s. Proceed anyway.", exc)
 			self.reconnect_attempt += 1
-			wait_time = 10*self.reconnect_attempt
+			wait_time = 10 * self.reconnect_attempt + random.randint(1,10)
 			if wait_time > self.MAX_RECONNECT_WAITTIME:
 				wait_time = self.MAX_RECONNECT_WAITTIME
 			logger.debug("Waiting before trying next reconnect for %s seconds" % wait_time)
