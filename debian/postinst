@@ -1,8 +1,8 @@
-#!/bin/sh
+#!/bin/sh -e
 
 if [ "$1" = "configure" ]; then
 	# This is necessary for starting the daemon. See #537376.
 	update-python-modules -p
 fi
 
-#DEBHELPER# 
+#DEBHELPER#
