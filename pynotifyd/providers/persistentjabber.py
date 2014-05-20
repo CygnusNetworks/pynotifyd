@@ -125,9 +125,9 @@ class PersistentJabberClient(base_jabber.BaseJabberClient, threading.Thread):  #
 
 	Users may change their settings by sending messages:
 	- "ignore": Further messages are pretended to be delivered without
-	   being delivered.
+	being delivered.
 	- "disable": This resource will not receive further messages. Other ways
-	   of contacting the user are tried.
+	of contacting the user are tried.
 	- "normal": Reset configuration to normal delivery.
 	- "help": Print help text.
 
@@ -155,12 +155,13 @@ class PersistentJabberClient(base_jabber.BaseJabberClient, threading.Thread):  #
 	@ivar terminating: whether the client is about to shut down
 	"""
 	MAX_RECONNECT_WAITTIME = 120
+
 	def __init__(self, jid, password, tls_require=True, tls_verify_peer=False, cacert_file=None, ping_max_age=0, ping_timeout=10, reconnect_timeout=600):  # pylint:disable=R0913
 		"""
 		@type jid: pyxmpp.jid.JID
 		@type password: str
 		"""
-		base_jabber.BaseJabberClient.__init__(self, jid, password, tls_require=True, tls_verify_peer=False, cacert_file=None)
+		base_jabber.BaseJabberClient.__init__(self, jid, password, tls_require=tls_require, tls_verify_peer=tls_verify_peer, cacert_file=cacert_file)
 		threading.Thread.__init__(self)
 		self.ping_max_age = ping_max_age
 		self.ping_timeout = ping_timeout
@@ -230,11 +231,12 @@ class PersistentJabberClient(base_jabber.BaseJabberClient, threading.Thread):  #
 		"""pyxmpp API method"""
 		if item is not None:
 			return
+		logger.debug("Roster updated. Connection is now usable")
 		self.connection_is_usable = True
 		self.connection_usable.notify_all()
 
 	def disconnected(self):
-		logger.info("Jabber connection terminated.")
+		logger.info("Jabber connection terminated for %s. Initiating reconnect" % self.jid)
 		self.initiate_reconnect()
 
 	### Section: our own methods for controlling the JabberClient
@@ -262,11 +264,11 @@ class PersistentJabberClient(base_jabber.BaseJabberClient, threading.Thread):  #
 		# is broken.
 		now = time.time()
 		if self.connection_is_usable:
-			logger.debug("Initiating jabber reconnect on usable connection.")
+			logger.debug("Initiating jabber reconnect on usable connection")
 		elif self.last_reconnect + self.reconnect_timeout < now:
-			logger.debug("Initiating reconnect because previous reconnect timed out.")
+			logger.debug("Initiating reconnect because previous reconnect timed out")
 		else:
-			logger.debug("Not initiating jabber reconnect after recent reconnect.")
+			logger.debug("Not initiating jabber reconnect after recent reconnect")
 			return
 
 		self.connection_is_usable = False
@@ -358,7 +360,7 @@ class PersistentJabberClient(base_jabber.BaseJabberClient, threading.Thread):  #
 							if self.terminating:
 								break
 					else:
-						logger.debug("jabber thread doing xmpp housekeeping")
+						logger.debug("jabber thread doing xmpp housekeeping calling idle()")
 						stream.idle()
 				elif self.terminating:
 					logger.debug("detected termination on dead stream")

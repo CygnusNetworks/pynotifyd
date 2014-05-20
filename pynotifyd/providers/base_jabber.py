@@ -1,6 +1,8 @@
 #!/usr/bin/env python
 # -*- coding: utf-8 -*-
 
+import logging
+
 import pyxmpp.exceptions
 import pyxmpp.jabber.client
 import pyxmpp.jid
@@ -8,6 +10,8 @@ import pyxmpp.presence
 import pyxmpp.streamtls
 
 from .. import errors
+
+logger = logging.getLogger("pynotifyd.providers.base_jabber")
 
 
 class BaseJabberClient(pyxmpp.jabber.client.JabberClient, pyxmpp.streamtls.StreamTLSMixIn, object):  # pylint:disable=R0904
@@ -46,10 +50,14 @@ class BaseJabberClient(pyxmpp.jabber.client.JabberClient, pyxmpp.streamtls.Strea
 
 	### Section: pyxmpp JabberClient API methods
 	def session_started(self):
+		logger.debug("Session started for jid %s" % self.jid)
 		self.stream.set_presence_handler("available", self.handle_presence_available)
 		self.stream.set_presence_handler("unavailable", self.handle_presence_unavailable)
+		logger.debug("Calling handle_session_started")
 		self.handle_session_started()
+		logger.debug("Requesting roster")
 		self.request_roster()
+		logger.debug("Send presence")
 		self.stream.send(pyxmpp.presence.Presence())
 
 
