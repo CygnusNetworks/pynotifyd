@@ -7,7 +7,7 @@ Build-Depends: debhelper (>= 9), python-all, python-setuptools
 
 Package: python-pynotifyd
 Architecture: all
-Depends: python-configobj, python-setproctitle, python-gsmsapi, python-phonenumbers, python-pyinotify, python-pyxmpp, ${python:Depends}, ${misc:Depends},
+Depends: ${python:Depends}, ${misc:Depends}
 X-Python-Version: >= 2.6
 Recommends: python-setproctitle, python-pyinotify, python-pyxmpp, python-gsmsapi, python-phonenumbers
 Description: Python Notification Daemon
