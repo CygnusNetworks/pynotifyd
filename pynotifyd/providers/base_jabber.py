@@ -97,7 +97,7 @@ def validate_recipient(recipient):
 	try:
 		include_states = make_set(recipient["jabber_include_states"])
 	except KeyError:
-		include_states = {"online", "chat"}
+		include_states = set(["online", "chat"])
 	except ValueError, err:
 		raise errors.PyNotifyDConfigurationError("invalid value for jabber_include_states: %s" % str(err))
 	if not include_states:
