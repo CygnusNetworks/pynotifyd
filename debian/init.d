@@ -9,7 +9,6 @@
 # Description:       The daemon allows you to send a message to a contact via
 #                    jabber, email or sms whatever fits best. It is intended for
 #                    use with Nagios.
-#
 ### END INIT INFO
 
 # Author: Helmut Grohne <h.grohne@cygnusnetworks.de>
