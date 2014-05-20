@@ -18,10 +18,6 @@ try:
 	import pyinotify
 except ImportError:
 	HAS_INOTIFY = False
-else:
-	# Now pyinoty has called its log_init and fucked the GLOBAL LOGGER CLASS.
-	import logging
-	logging.setLoggerClass(logging.Logger)
 
 import pynotifyd
 import pynotifyd.config
@@ -38,8 +34,8 @@ try:
 except ImportError:
 	pass
 
-logger = logging.getLogger("pynotifyd.daemon")
 
+logger = logging.getLogger("pynotifyd.daemon")
 
 def logstderr(message):
 	sys.stderr.write(message + "\n")
@@ -136,13 +132,6 @@ def get_log_address():
 	return log_address
 
 
-def syslog_handler(ident):
-	sysloghand = logging.handlers.SysLogHandler(address=get_log_address())
-	logformat = "%s[%%(process)s]: %%(message)s" % (ident,)
-	sysloghand.setFormatter(logging.Formatter(logformat))
-	return sysloghand
-
-
 def main():
 	config = directory_watcher = queue = providers = old_stderr = None
 
@@ -160,7 +149,10 @@ def main():
 	if options.foreground:
 		mainlogger.addHandler(logging.StreamHandler(sys.stderr))
 	else:
-		mainlogger.addHandler(syslog_handler("pynotifyd"))
+		sysloghand = logging.handlers.SysLogHandler(address=get_log_address())
+		logformat = "%(name)s[%(process)s]: %(filename)s:%(lineno)d/%(funcName)s###%(message)s"
+		sysloghand.setFormatter(logging.Formatter(logformat))
+		mainlogger.addHandler(sysloghand)
 
 	if args:
 		die("unrecognized non-option parameters were passed")
