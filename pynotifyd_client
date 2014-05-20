@@ -11,6 +11,12 @@ import pynotifyd.config
 import pynotifyd.errors
 import pynotifyd.queue
 
+# The following snippet has to occur before anyone uses the logging module.
+HAS_INOTIFY = True
+try:
+	import pyinotify
+except ImportError:
+	HAS_INOTIFY = False
 
 def die(message):
 	sys.stderr.write(message + "\n")
@@ -55,7 +61,8 @@ def main():
 	except pynotifyd.errors.PyNotifyDError, err:
 		die_exc(err)
 
-	if config["general"]["notify"] == "signal":
+
+	if not HAS_INOTIFY:
 		pid = queue.getlockowner()
 		if pid is not None:
 			try:

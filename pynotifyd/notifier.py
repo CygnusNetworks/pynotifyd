@@ -8,18 +8,9 @@ import time
 
 
 class SignalDirectoryWatcher(object):
-	def __init__(self, _, maxwaittime=3600, signum=signal.SIGUSR1):
-		"""
-		@type maxwaittime: int
-		@type signum: int or None
-		@param signum: unless None a signal handler is installed for
-			this signal. The handler does nothing, but the signal
-			interrupts a sleep, so the __call__ method returns upon
-			receiving said signal.
-		"""
+	def __init__(self, _, maxwaittime=3600):
 		self.maxwaittime = maxwaittime
-		if signum is not None:
-			signal.signal(signum, self.process_signal)
+		signal.signal(signal.SIGUSR1, self.process_signal)
 
 	def process_signal(self, signum, stackframe):
 		pass  # handling signal to interrupt the sleep
@@ -33,15 +24,15 @@ class SignalDirectoryWatcher(object):
 
 try:
 	import pyinotify
-except ImportError:
-	class InotifyDirectoryWatcher(object):  # pylint: disable=R0903
-		def __init__(self, _):
-			raise ImportError("failed to import pyinotify")
-else:
+
+	def dummy_signal(signum, stackframe):
+		pass
+
 	class InotifyDirectoryWatcher(object):
 		class IgnoreEvent(pyinotify.ProcessEvent):  # pylint:disable=R0903
 			def __init__(self):
 				pyinotify.ProcessEvent.__init__(self)
+
 			def process_default(self, event):
 				pass
 
@@ -51,7 +42,7 @@ else:
 				self.watchmanager.add_watch(directory, pyinotify.EventsCodes.IN_MOVED_TO)
 			except AttributeError:
 				self.watchmanager.add_watch(directory, pyinotify.IN_MOVED_TO)
-
+			signal.signal(signal.SIGUSR1, dummy_signal)
 			self.notifier = pyinotify.Notifier(self.watchmanager, InotifyDirectoryWatcher.IgnoreEvent())
 
 		def notifier_check_events_hack(self, maxwait=None):
@@ -77,3 +68,5 @@ else:
 			if self.notifier_check_events_hack(maxwait):  # select/poll
 				self.notifier.read_events()  # nonblocking read
 				self.notifier.process_events()  # clean queue
+except:
+	pass

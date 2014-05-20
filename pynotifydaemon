@@ -147,12 +147,12 @@ def main():
 	mainlogger = logging.getLogger(None if options.debuglibs else "pynotifyd")
 	mainlogger.setLevel(logging.DEBUG)
 	if options.foreground:
-		mainlogger.addHandler(logging.StreamHandler(sys.stderr))
+		sysloghand = logging.StreamHandler(sys.stdout)
 	else:
 		sysloghand = logging.handlers.SysLogHandler(address=get_log_address())
-		logformat = "%(name)s[%(process)s]: %(filename)s:%(lineno)d/%(funcName)s###%(message)s"
-		sysloghand.setFormatter(logging.Formatter(logformat))
-		mainlogger.addHandler(sysloghand)
+	logformat = "%(name)s[%(process)s]: %(filename)s:%(lineno)d/%(funcName)s###%(message)s"
+	sysloghand.setFormatter(logging.Formatter(logformat))
+	mainlogger.addHandler(sysloghand)
 
 	if args:
 		die("unrecognized non-option parameters were passed")
@@ -174,14 +174,10 @@ def main():
 	if "chuid" in config["general"]:
 		chuid(config["general"]["chuid"])
 
-	if config["general"]["notify"] == "inotify" and HAS_INOTIFY is False:
-		die("inotify specified in [general][notify] but inotify is missing. Install inotify python module or change config")
-	elif config["general"]["notify"] == "inotify":
+	if HAS_INOTIFY:
 		directory_watcher = pynotifyd.notifier.InotifyDirectoryWatcher
-	elif config["general"]["notify"] == "signal":
-		directory_watcher = pynotifyd.notifier.SignalDirectoryWatcher
 	else:
-		die("unknown notify method %r" % config["general"]["notify"])
+		directory_watcher = pynotifyd.notifier.SignalDirectoryWatcher
 
 	if not options.foreground:
 		old_stderr = sys.stderr
