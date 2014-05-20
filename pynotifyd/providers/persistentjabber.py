@@ -19,7 +19,7 @@ import pyxmpp.presence
 
 from .. import errors
 import base
-import jabbercommon
+import base_jabber
 
 logger = logging.getLogger("pynotifyd.providers.persistentjabber")
 
@@ -119,7 +119,7 @@ class SendPing(object):
 		return time.time() - self.sent
 
 
-class PersistentJabberClient(jabbercommon.BaseJabberClient, threading.Thread):  # pylint:disable=R0902,R0904
+class PersistentJabberClient(base_jabber.BaseJabberClient, threading.Thread):  # pylint:disable=R0902,R0904
 	"""Maintains a persistent jabber connection, presence states of contacts
 	and user defined per-resource settings.
 
@@ -160,7 +160,7 @@ class PersistentJabberClient(jabbercommon.BaseJabberClient, threading.Thread):  
 		@type jid: pyxmpp.jid.JID
 		@type password: str
 		"""
-		jabbercommon.BaseJabberClient.__init__(self, jid, password, tls_require=True, tls_verify_peer=False, cacert_file=None)
+		base_jabber.BaseJabberClient.__init__(self, jid, password, tls_require=True, tls_verify_peer=False, cacert_file=None)
 		threading.Thread.__init__(self)
 		self.ping_max_age = ping_max_age
 		self.ping_timeout = ping_timeout
@@ -456,7 +456,7 @@ class ProviderPersistentJabber(base.ProviderBase):
 		self.client_thread.start()
 
 	def send_message(self, recipient, message):
-		jid, exclude_resources, include_states = jabbercommon.validate_recipient(recipient)
+		jid, exclude_resources, include_states = base_jabber.validate_recipient(recipient)
 		# The following raises a number of pynotifyd exceptions.
 		self.client_thread.send_message(jid, message, exclude_resources.__contains__, include_states.__contains__)
 

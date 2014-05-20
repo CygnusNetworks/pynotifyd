@@ -9,12 +9,12 @@ import pyxmpp.jid
 import pyxmpp.presence
 
 import base
-import jabbercommon
+import base_jabber
 
 from .. import errors
 
 
-class SendJabberClient(jabbercommon.BaseJabberClient, object):  # pylint:disable=R0904
+class SendJabberClient(base_jabber.BaseJabberClient, object):  # pylint:disable=R0904
 	def __init__(self, jid, password, target, message, exclude_resources, include_states, tls_require=True, tls_verify_peer=False, cacert_file=None):  # pylint:disable=R0913
 		"""
 		@type jid: pyxmpp.jid.JID
@@ -24,7 +24,7 @@ class SendJabberClient(jabbercommon.BaseJabberClient, object):  # pylint:disable
 		@type exclude_resources: str -> bool
 		@type include_states: str -> bool
 		"""
-		jabbercommon.BaseJabberClient.__init__(self, jid, password, tls_require=tls_require, tls_verify_peer=tls_verify_peer, cacert_file=cacert_file)
+		base_jabber.BaseJabberClient.__init__(self, jid, password, tls_require=tls_require, tls_verify_peer=tls_verify_peer, cacert_file=cacert_file)
 		self.target = target
 		self.message = pyxmpp.message.Message(to_jid=self.target, body=message)
 		self.exclude_resources = exclude_resources
@@ -103,7 +103,7 @@ class ProviderJabber(base.ProviderBase, object):
 		self.timeout = int(config["timeout"])
 
 	def send_message(self, recipient, message):
-		jid, exclude_resources, include_states = jabbercommon.validate_recipient(recipient)
+		jid, exclude_resources, include_states = base_jabber.validate_recipient(recipient)
 		client = SendJabberClient(self.jid, self.password, jid, message, exclude_resources.__contains__, include_states.__contains__)
 		client.connect()
 		client.loop_timeout(self.timeout)
