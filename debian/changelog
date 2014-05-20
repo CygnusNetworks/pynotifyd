@@ -1,3 +1,11 @@
+pynotifyd (0.91) wheezy; urgency=low
+
+  * Add TLS Support
+  * Remove pyinotify configuration and use automatic config
+  * Add increasing sleeps in reconnect handling
+
+ -- Torge Szczepanek <debian@cygnusnetworks.de>  Tue, 20 May 2014 14:30:47 +0200
+
 pynotifyd (0.90) wheezy; urgency=low
 
   * Switch to use python-gsmsapi and include SMStrade
