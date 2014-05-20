@@ -52,6 +52,7 @@ class BaseJabberClient(pyxmpp.jabber.client.JabberClient, pyxmpp.streamtls.Strea
 		self.request_roster()
 		self.stream.send(pyxmpp.presence.Presence())
 
+
 def make_set(value):
 	if isinstance(value, list):
 		pass  # ok

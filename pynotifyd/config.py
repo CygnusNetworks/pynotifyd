@@ -20,11 +20,14 @@ config_spec = configobj.ConfigObj("""
 queuedir = string(min=1)
 retry = list(min=1)
 notify = option("inotify", "signal")
+
 [contacts]
 [[__many__]]
+
 [providers]
 [[__many__]]
 driver = string(min=1)
+
 """.splitlines(), interpolation=False, list_values=False)
 
 
