@@ -20,7 +20,8 @@ setup(name='pynotifyd',
 		"Development Status :: 4 - Beta",
 		"Intended Audience :: System Administrators",
 		"Programming Language :: Python",
-		],
+		"License :: OSI Approved :: GNU General Public License v3 (GPLv3)",
+		],  # see: https://pypi.python.org/pypi?%3Aaction=list_classifiers
+	platforms='any',
 	install_requires=["configobj", "pyinotify", "setproctitle", "pyxmpp", "gsmsapi", "phonenumbers"],
 	)
-
